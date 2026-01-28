@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Number Munchers</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- Splash Screen -->
+    <div id="splash-screen" class="screen active">
+        <div class="splash-content">
+            <h1 class="game-title">
+                <span class="letter" style="--delay: 0">N</span>
+                <span class="letter" style="--delay: 1">U</span>
+                <span class="letter" style="--delay: 2">M</span>
+                <span class="letter" style="--delay: 3">B</span>
+                <span class="letter" style="--delay: 4">E</span>
+                <span class="letter" style="--delay: 5">R</span>
+                <span class="space"></span>
+                <span class="letter" style="--delay: 6">M</span>
+                <span class="letter" style="--delay: 7">U</span>
+                <span class="letter" style="--delay: 8">N</span>
+                <span class="letter" style="--delay: 9">C</span>
+                <span class="letter" style="--delay: 10">H</span>
+                <span class="letter" style="--delay: 11">E</span>
+                <span class="letter" style="--delay: 12">R</span>
+                <span class="letter" style="--delay: 13">S</span>
+            </h1>
+            <div class="muncher-mascot">
+                <div class="muncher-face">
+                    <div class="eye left"></div>
+                    <div class="eye right"></div>
+                    <div class="mouth"></div>
+                </div>
+            </div>
+            <p class="press-start blink">Press Any Key or Tap to Start!</p>
+        </div>
+    </div>
+
+    <!-- Main Menu -->
+    <div id="menu-screen" class="screen">
+        <div class="menu-content">
+            <h1 class="menu-title">Number Munchers</h1>
+            <nav class="menu-options">
+                <button class="menu-btn selected" data-action="new-game">
+                    <span class="btn-icon">🎮</span> New Game
+                </button>
+                <button class="menu-btn" data-action="high-scores">
+                    <span class="btn-icon">🏆</span> High Scores
+                </button>
+                <button class="menu-btn" data-action="how-to-play">
+                    <span class="btn-icon">❓</span> How to Play
+                </button>
+            </nav>
+            <div class="menu-footer">
+                <p>Use Arrow Keys & Enter, Click, or Tap</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- High Scores Screen -->
+    <div id="highscores-screen" class="screen">
+        <div class="highscores-content">
+            <h1 class="screen-title">High Scores</h1>
+            <div class="trophy">🏆</div>
+            <ol id="highscores-list" class="highscores-list">
+                <!-- Populated by JS -->
+            </ol>
+            <button class="back-btn" data-action="back-to-menu">Back to Menu</button>
+        </div>
+    </div>
+
+    <!-- How to Play Screen -->
+    <div id="howtoplay-screen" class="screen">
+        <div class="howtoplay-content">
+            <h1 class="screen-title">How to Play</h1>
+            <div class="instructions">
+                <div class="instruction-item">
+                    <div class="instruction-icon">🎯</div>
+                    <p>Munch the numbers that match the rule at the top!</p>
+                </div>
+                <div class="instruction-item">
+                    <div class="instruction-icon">⬆️⬇️⬅️➡️</div>
+                    <p>Use arrow keys, swipe, or click to move</p>
+                </div>
+                <div class="instruction-item">
+                    <div class="instruction-icon">⎵</div>
+                    <p>Press Space or tap your cell to munch</p>
+                </div>
+                <div class="instruction-item">
+                    <div class="instruction-icon">👾</div>
+                    <p>Avoid the Troggles! They want to catch you!</p>
+                </div>
+                <div class="instruction-item">
+                    <div class="instruction-icon">❤️</div>
+                    <p>Wrong answers and Troggles cost you a life!</p>
+                </div>
+            </div>
+            <button class="back-btn" data-action="back-to-menu">Got it!</button>
+        </div>
+    </div>
+
+    <!-- Game Screen -->
+    <div id="game-screen" class="screen">
+        <div class="game-container">
+            <!-- Game Header -->
+            <div class="game-header">
+                <div class="game-rule">
+                    <span class="rule-label">Find:</span>
+                    <span id="current-rule" class="rule-text">Multiples of 3</span>
+                </div>
+                <div class="game-stats">
+                    <div class="stat">
+                        <span class="stat-label">Score</span>
+                        <span id="score" class="stat-value">0</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Level</span>
+                        <span id="level" class="stat-value">1</span>
+                    </div>
+                    <div class="stat lives-stat">
+                        <span class="stat-label">Lives</span>
+                        <span id="lives" class="stat-value lives">❤️❤️❤️❤️</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Game Grid -->
+            <div id="game-grid" class="game-grid">
+                <!-- 6x5 grid cells populated by JS -->
+            </div>
+
+            <!-- Touch Controls (visible on touch devices) -->
+            <div id="touch-controls" class="touch-controls">
+                <button class="touch-btn" data-direction="up">▲</button>
+                <div class="touch-row">
+                    <button class="touch-btn" data-direction="left">◀</button>
+                    <button class="touch-btn munch-btn" data-action="munch">MUNCH!</button>
+                    <button class="touch-btn" data-direction="right">▶</button>
+                </div>
+                <button class="touch-btn" data-direction="down">▼</button>
+            </div>
+
+            <!-- Feedback Messages -->
+            <div id="feedback" class="feedback"></div>
+        </div>
+    </div>
+
+    <!-- Pause Overlay -->
+    <div id="pause-overlay" class="overlay">
+        <div class="overlay-content">
+            <h2>Paused</h2>
+            <button class="menu-btn" data-action="resume">Resume</button>
+            <button class="menu-btn" data-action="quit-to-menu">Quit to Menu</button>
+        </div>
+    </div>
+
+    <!-- Level Complete Overlay -->
+    <div id="level-complete-overlay" class="overlay">
+        <div class="overlay-content celebration">
+            <h2>Level Complete!</h2>
+            <div class="stars">⭐⭐⭐</div>
+            <p id="level-complete-message">Great job!</p>
+            <button class="menu-btn" data-action="next-level">Next Level</button>
+        </div>
+    </div>
+
+    <!-- Game Over Screen -->
+    <div id="gameover-screen" class="screen">
+        <div class="gameover-content">
+            <h1 class="gameover-title">Game Over</h1>
+            <div id="final-score-display" class="final-score">
+                <p>Your Score</p>
+                <span id="final-score" class="big-score">0</span>
+            </div>
+            <div id="new-highscore" class="new-highscore hidden">
+                <p>New High Score!</p>
+                <div class="initials-input">
+                    <input type="text" id="initials" maxlength="3" placeholder="AAA" autocomplete="off">
+                </div>
+                <button class="menu-btn" data-action="save-score">Save Score</button>
+            </div>
+            <button class="menu-btn" data-action="play-again">Play Again</button>
+            <button class="menu-btn secondary" data-action="back-to-menu">Main Menu</button>
+        </div>
+    </div>
+
+    <!-- Confetti Container -->
+    <div id="confetti-container" class="confetti-container"></div>
+
+    <!-- Scripts -->
+    <script src="js/storage.js"></script>
+    <script src="js/input.js"></script>
+    <script src="js/levels.js"></script>
+    <script src="js/grid.js"></script>
+    <script src="js/muncher.js"></script>
+    <script src="js/troggle.js"></script>
+    <script src="js/game.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
