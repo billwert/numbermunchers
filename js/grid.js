@@ -269,9 +269,10 @@ const Grid = {
             this.gridGap = parseInt(getComputedStyle(this.element).gap) || 4;
         }
         
-        // Account for grid border (3px) + padding (10px)
+        // Account for grid border (3px) + padding (dynamic)
         const gridBorder = 3;
-        const offset = this.gridPadding + gridBorder;
+        const gridPadding = parseInt(getComputedStyle(this.element).padding) || 10;
+        const offset = gridPadding + gridBorder;
 
         return {
             x: offset + x * (this.cellSize + this.gridGap),

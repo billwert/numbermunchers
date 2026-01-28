@@ -36,9 +36,11 @@
     --color-muncher-dark: #2E7D32;
     --color-troggle: #FF5722;
 
-    /* Sizing */
-    --cell-size: min(60px, 12vw);
-    --grid-gap: 4px;
+    /* Sizing - scale based on viewport 
+       Grid is 6 columns, need to fit with gaps and padding
+       Also need room for header (~150px) and touch controls (~120px) */
+    --cell-size: min(70px, calc((100vw - 60px) / 6.5), calc((100vh - 320px) / 5.5));
+    --grid-gap: clamp(2px, 0.5vmin, 4px);
     --border-radius: 12px;
 
     /* Fonts */
@@ -498,31 +500,34 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 15px;
+    justify-content: center;
+    gap: clamp(8px, 1.5vh, 15px);
     max-width: 100%;
+    height: 100%;
+    padding: 10px;
 }
 
 .game-header {
     width: 100%;
-    max-width: 450px;
+    max-width: calc(6 * var(--cell-size) + 5 * var(--grid-gap) + 26px);
     text-align: center;
 }
 
 .game-rule {
     background: linear-gradient(145deg, var(--color-secondary), #E65100);
-    padding: 15px 25px;
+    padding: clamp(8px, 1.5vh, 15px) clamp(15px, 3vw, 25px);
     border-radius: var(--border-radius);
-    margin-bottom: 15px;
+    margin-bottom: clamp(8px, 1.5vh, 15px);
     box-shadow: 0 4px 15px rgba(255, 152, 0, 0.3);
 }
 
 .rule-label {
-    font-size: 1rem;
+    font-size: clamp(0.8rem, 2vmin, 1rem);
     opacity: 0.9;
 }
 
 .rule-text {
-    font-size: 1.5rem;
+    font-size: clamp(1rem, 3vmin, 1.5rem);
     font-weight: bold;
     display: block;
     margin-top: 5px;
@@ -531,32 +536,32 @@ body {
 .game-stats {
     display: flex;
     justify-content: space-around;
-    gap: 10px;
+    gap: clamp(5px, 1vw, 10px);
     flex-wrap: wrap;
 }
 
 .stat {
     background: var(--color-cell-bg);
-    padding: 10px 20px;
+    padding: clamp(5px, 1vh, 10px) clamp(10px, 2vw, 20px);
     border-radius: var(--border-radius);
-    min-width: 80px;
+    min-width: clamp(60px, 10vw, 80px);
 }
 
 .stat-label {
-    font-size: 0.8rem;
+    font-size: clamp(0.6rem, 1.5vmin, 0.8rem);
     color: var(--color-text-muted);
     display: block;
 }
 
 .stat-value {
-    font-size: 1.5rem;
+    font-size: clamp(1rem, 3vmin, 1.5rem);
     font-weight: bold;
     color: var(--color-rainbow-5);
 }
 
 .lives {
-    font-size: 1.2rem;
-    letter-spacing: 3px;
+    font-size: clamp(0.9rem, 2.5vmin, 1.2rem);
+    letter-spacing: 2px;
 }
 
 /* =========================================
@@ -573,7 +578,7 @@ body {
     grid-template-rows: repeat(5, var(--cell-size));
     gap: var(--grid-gap);
     background: var(--color-bg-light);
-    padding: 10px;
+    padding: clamp(5px, 1vmin, 10px);
     border-radius: var(--border-radius);
     border: 3px solid var(--color-cell-border);
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3),
@@ -587,7 +592,7 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 1.5rem;
+    font-size: clamp(1rem, 3vmin, 1.5rem);
     font-weight: bold;
     cursor: pointer;
     transition: all 0.15s ease;
@@ -727,7 +732,7 @@ body {
 /* Flying number animation when eating */
 .flying-number {
     position: absolute;
-    font-size: 1.5rem;
+    font-size: clamp(1rem, 3vmin, 1.5rem);
     font-weight: bold;
     color: var(--color-text);
     pointer-events: none;
