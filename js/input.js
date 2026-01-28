@@ -52,10 +52,25 @@ const Input = {
 
             // Don't capture game keys when typing in an input
             if (isTyping) {
-                // Only allow Escape to work while typing (to cancel/blur)
+                // Allow Escape to blur the input
                 if (e.key === 'Escape') {
                     activeEl.blur();
+                    return;
                 }
+                // Allow Enter to trigger action (e.g., save high score)
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (this.onAction) this.onAction();
+                    return;
+                }
+                // Allow arrow up/down to navigate away from input
+                if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    activeEl.blur();
+                    if (this.onMove) this.onMove(e.key === 'ArrowUp' ? 'up' : 'down');
+                    return;
+                }
+                // Other keys: let the input handle them normally
                 return;
             }
 
