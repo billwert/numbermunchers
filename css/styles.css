@@ -455,6 +455,11 @@ body {
 /* =========================================
    GAME GRID
    ========================================= */
+.grid-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
 .game-grid {
     display: grid;
     grid-template-columns: repeat(6, var(--cell-size));
@@ -507,29 +512,101 @@ body {
     display: none;
 }
 
-/* Muncher in cell */
-.grid-cell.has-muncher {
-    background: var(--color-muncher);
-    border-color: var(--color-muncher-dark);
-    box-shadow: 0 0 15px rgba(76, 175, 80, 0.5);
+/* =========================================
+   MUNCHER SPRITE (Animated Character)
+   ========================================= */
+.muncher-sprite {
+    position: absolute;
+    width: var(--cell-size);
+    height: var(--cell-size);
+    pointer-events: none;
+    z-index: 10;
+    /* Smooth movement transition */
+    transition: transform 0.12s ease-out;
+    /* Start position will be set by JS */
+    transform: translate(0, 0);
 }
 
-.grid-cell.has-muncher::before {
-    content: '';
+.muncher-body {
     position: absolute;
-    width: 70%;
-    height: 70%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 75%;
+    height: 75%;
     background: var(--color-muncher);
     border-radius: 50%;
-    box-shadow: inset -5px -5px 10px rgba(0,0,0,0.2);
+    box-shadow:
+        0 0 20px rgba(76, 175, 80, 0.6),
+        inset -5px -5px 15px rgba(0, 0, 0, 0.2),
+        inset 5px 5px 15px rgba(255, 255, 255, 0.1);
+    border: 3px solid var(--color-muncher-dark);
 }
 
-/* Muncher eyes */
-.grid-cell.has-muncher::after {
-    content: '👀';
+.muncher-eye {
     position: absolute;
-    font-size: 1.2rem;
-    top: 20%;
+    width: 22%;
+    height: 28%;
+    background: white;
+    border-radius: 50%;
+    top: 22%;
+}
+
+.muncher-eye.left { left: 18%; }
+.muncher-eye.right { right: 18%; }
+
+.muncher-eye::after {
+    content: '';
+    position: absolute;
+    width: 50%;
+    height: 50%;
+    background: #333;
+    border-radius: 50%;
+    bottom: 15%;
+    left: 50%;
+    transform: translateX(-50%);
+    animation: muncher-look 3s ease-in-out infinite;
+}
+
+@keyframes muncher-look {
+    0%, 100% { transform: translateX(-50%); }
+    25% { transform: translateX(-80%); }
+    75% { transform: translateX(-20%); }
+}
+
+.muncher-mouth {
+    position: absolute;
+    width: 40%;
+    height: 20%;
+    background: #333;
+    border-radius: 0 0 50% 50%;
+    bottom: 18%;
+    left: 50%;
+    transform: translateX(-50%);
+    animation: muncher-chomp 0.4s ease-in-out infinite;
+}
+
+@keyframes muncher-chomp {
+    0%, 100% { height: 20%; }
+    50% { height: 8%; }
+}
+
+/* Muncher happy bounce on correct munch */
+.muncher-sprite.happy {
+    animation: muncher-bounce 0.4s ease-out;
+}
+
+@keyframes muncher-bounce {
+    0%, 100% { transform: var(--current-transform); }
+    25% { transform: var(--current-transform) scale(1.15) translateY(-8px); }
+    50% { transform: var(--current-transform) scale(0.95); }
+    75% { transform: var(--current-transform) scale(1.05); }
+}
+
+/* Muncher cell highlight (shows which cell muncher is in) */
+.grid-cell.muncher-cell {
+    background: rgba(76, 175, 80, 0.2);
+    border-color: var(--color-muncher);
 }
 
 /* Troggle in cell */

@@ -127,8 +127,18 @@
             </div>
 
             <!-- Game Grid -->
-            <div id="game-grid" class="game-grid">
-                <!-- 6x5 grid cells populated by JS -->
+            <div class="grid-wrapper">
+                <div id="game-grid" class="game-grid">
+                    <!-- 6x5 grid cells populated by JS -->
+                </div>
+                <!-- Muncher Sprite (animated separately for smooth movement) -->
+                <div id="muncher-sprite" class="muncher-sprite">
+                    <div class="muncher-body">
+                        <div class="muncher-eye left"></div>
+                        <div class="muncher-eye right"></div>
+                        <div class="muncher-mouth"></div>
+                    </div>
+                </div>
             </div>
 
             <!-- Touch Controls (visible on touch devices) -->

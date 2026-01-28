@@ -9,12 +9,42 @@ const Grid = {
     // Grid state: array of {value, isCorrect, munched}
     cells: [],
 
-    // DOM element
+    // DOM elements
     element: null,
+    muncherSprite: null,
+
+    // Cell dimensions (calculated from CSS)
+    cellSize: 60,
+    gridGap: 4,
+    gridPadding: 10,
 
     init() {
         this.element = document.getElementById('game-grid');
+        this.muncherSprite = document.getElementById('muncher-sprite');
         this.createCells();
+        this.calculateDimensions();
+    },
+
+    // Calculate cell dimensions from computed styles
+    calculateDimensions() {
+        const computedStyle = getComputedStyle(document.documentElement);
+        const cellSizeStr = computedStyle.getPropertyValue('--cell-size').trim();
+
+        // Parse cell size (handles both px values and min() functions)
+        if (cellSizeStr.includes('px')) {
+            this.cellSize = parseInt(cellSizeStr);
+        } else {
+            // Fallback: measure first cell after rendering
+            setTimeout(() => {
+                const firstCell = this.element.querySelector('.grid-cell');
+                if (firstCell) {
+                    this.cellSize = firstCell.offsetWidth;
+                }
+            }, 0);
+        }
+
+        this.gridGap = parseInt(computedStyle.getPropertyValue('--grid-gap')) || 4;
+        this.gridPadding = 10; // From CSS
     },
 
     // Create the grid cell DOM elements
@@ -134,21 +164,45 @@ const Grid = {
         return this.cells.filter(cell => cell.isCorrect && !cell.munched).length;
     },
 
-    // Update muncher position display
+    // Update muncher position display (sprite-based for smooth animation)
     updateMuncherPosition(x, y, prevX, prevY) {
-        // Remove muncher from previous cell
+        // Remove highlight from previous cell
         if (prevX !== undefined && prevY !== undefined) {
             const prevCell = this.getCellElement(prevX, prevY);
             if (prevCell) {
-                prevCell.classList.remove('has-muncher');
+                prevCell.classList.remove('muncher-cell');
             }
         }
 
-        // Add muncher to new cell
+        // Add highlight to new cell
         const newCell = this.getCellElement(x, y);
         if (newCell) {
-            newCell.classList.add('has-muncher');
+            newCell.classList.add('muncher-cell');
         }
+
+        // Move the sprite with CSS transform
+        if (this.muncherSprite) {
+            const pixelPos = this.getPixelPosition(x, y);
+            const transform = `translate(${pixelPos.x}px, ${pixelPos.y}px)`;
+            this.muncherSprite.style.transform = transform;
+            // Store current transform for animations
+            this.muncherSprite.style.setProperty('--current-transform', transform);
+        }
+    },
+
+    // Calculate pixel position for a grid cell
+    getPixelPosition(x, y) {
+        // Recalculate cell size if needed (handles responsive sizing)
+        const firstCell = this.element.querySelector('.grid-cell');
+        if (firstCell) {
+            this.cellSize = firstCell.offsetWidth;
+            this.gridGap = parseInt(getComputedStyle(this.element).gap) || 4;
+        }
+
+        return {
+            x: this.gridPadding + x * (this.cellSize + this.gridGap),
+            y: this.gridPadding + y * (this.cellSize + this.gridGap)
+        };
     },
 
     // Update Troggle positions display
@@ -167,13 +221,12 @@ const Grid = {
         });
     },
 
-    // Highlight muncher cell on successful munch
-    celebrateMunch(x, y) {
-        const cell = this.getCellElement(x, y);
-        if (cell) {
-            cell.classList.add('muncher-happy');
+    // Celebrate muncher on successful munch (animate the sprite)
+    celebrateMunch() {
+        if (this.muncherSprite) {
+            this.muncherSprite.classList.add('happy');
             setTimeout(() => {
-                cell.classList.remove('muncher-happy');
+                this.muncherSprite.classList.remove('happy');
             }, 400);
         }
     },

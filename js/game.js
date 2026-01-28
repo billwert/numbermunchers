@@ -132,7 +132,7 @@ const Game = {
             this.showFeedback(message, 'correct');
 
             // Celebrate
-            Grid.celebrateMunch(this.muncher.x, this.muncher.y);
+            Grid.celebrateMunch();
             this.spawnConfetti(5);
 
             // Check if level complete
