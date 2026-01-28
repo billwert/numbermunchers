@@ -40,9 +40,22 @@ const Input = {
         document.addEventListener('keydown', (e) => {
             if (!this.enabled) return;
 
-            // Any key callback (for splash screen)
-            if (this.onAnyKey) {
+            // Check if user is typing in an input field
+            const activeEl = document.activeElement;
+            const isTyping = activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA');
+
+            // Any key callback (for splash screen) - but not when typing
+            if (this.onAnyKey && !isTyping) {
                 this.onAnyKey();
+            }
+
+            // Don't capture game keys when typing in an input
+            if (isTyping) {
+                // Only allow Escape to work while typing (to cancel/blur)
+                if (e.key === 'Escape') {
+                    activeEl.blur();
+                }
+                return;
             }
 
             switch (e.key) {
