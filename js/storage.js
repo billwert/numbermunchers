@@ -22,11 +22,11 @@ const Storage = {
     // Default scores for new players
     getDefaultScores() {
         return [
-            { initials: 'ACE', score: 500 },
-            { initials: 'PRO', score: 400 },
-            { initials: 'WIZ', score: 300 },
-            { initials: 'FUN', score: 200 },
-            { initials: 'YAY', score: 100 }
+            { name: 'Math Champion', score: 500 },
+            { name: 'Number Pro', score: 400 },
+            { name: 'Quiz Wizard', score: 300 },
+            { name: 'Fun Player', score: 200 },
+            { name: 'New Kid', score: 100 }
         ];
     },
 
@@ -49,14 +49,14 @@ const Storage = {
     },
 
     // Add a new high score
-    addHighScore(initials, score) {
+    addHighScore(name, score) {
         const scores = this.getHighScores();
 
-        // Sanitize initials
-        initials = (initials || 'AAA').toUpperCase().slice(0, 3).padEnd(3, 'A');
+        // Sanitize name (trim, limit to 30 chars, default to "Player")
+        name = (name || '').trim().slice(0, 30) || 'Player';
 
         // Add new score
-        scores.push({ initials, score });
+        scores.push({ name, score });
 
         // Sort by score descending
         scores.sort((a, b) => b.score - a.score);

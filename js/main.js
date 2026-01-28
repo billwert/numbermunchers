@@ -120,11 +120,11 @@ const Main = {
         const list = document.getElementById('highscores-list');
         const scores = Storage.getHighScores();
 
-        list.innerHTML = scores.map((score, i) => `
+        list.innerHTML = scores.map((entry, i) => `
             <li>
                 <span class="rank">${i + 1}.</span>
-                <span class="initials">${score.initials}</span>
-                <span class="score">${score.score}</span>
+                <span class="player-name">${entry.name || entry.initials || 'Player'}</span>
+                <span class="score">${entry.score}</span>
             </li>
         `).join('');
     },
@@ -147,8 +147,8 @@ const Main = {
 
         Input.onAction = () => {
             // If high score input is visible and focused, don't handle action
-            const initialsInput = document.getElementById('initials');
-            if (document.activeElement === initialsInput) {
+            const nameInput = document.getElementById('player-name');
+            if (document.activeElement === nameInput) {
                 return;
             }
         };

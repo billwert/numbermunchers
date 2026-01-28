@@ -331,9 +331,9 @@ body {
 .highscores-list li:nth-child(2) { background: linear-gradient(90deg, #C0C0C0, #A0A0A0); color: #333; }
 .highscores-list li:nth-child(3) { background: linear-gradient(90deg, #CD7F32, #8B4513); }
 
-.highscores-list .rank { font-weight: bold; min-width: 30px; }
-.highscores-list .initials { font-weight: bold; text-transform: uppercase; }
-.highscores-list .score { color: var(--color-rainbow-5); }
+.highscores-list .rank { font-weight: bold; min-width: 30px; flex-shrink: 0; }
+.highscores-list .player-name { font-weight: bold; flex: 1; text-align: left; margin: 0 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.highscores-list .score { color: var(--color-rainbow-5); flex-shrink: 0; }
 
 .back-btn {
     margin-top: 30px;
@@ -742,22 +742,27 @@ body {
     margin-bottom: 15px;
 }
 
-.initials-input input {
-    font-size: 2rem;
+.name-input input {
+    font-size: 1.3rem;
     text-align: center;
-    width: 120px;
-    padding: 10px;
+    width: 100%;
+    max-width: 280px;
+    padding: 12px 15px;
     background: var(--color-bg);
     border: 3px solid var(--color-rainbow-5);
     border-radius: var(--border-radius);
     color: var(--color-text);
-    text-transform: uppercase;
     font-family: var(--font-main);
 }
 
-.initials-input input:focus {
+.name-input input:focus {
     outline: none;
     border-color: var(--color-primary);
+}
+
+.name-input input::placeholder {
+    color: var(--color-text-muted);
+    opacity: 0.7;
 }
 
 .hidden {

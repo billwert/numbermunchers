@@ -296,8 +296,8 @@ const Game = {
             const newHighscoreDiv = document.getElementById('new-highscore');
             if (Storage.isHighScore(this.score)) {
                 newHighscoreDiv.classList.remove('hidden');
-                document.getElementById('initials').value = '';
-                document.getElementById('initials').focus();
+                document.getElementById('player-name').value = '';
+                document.getElementById('player-name').focus();
             } else {
                 newHighscoreDiv.classList.add('hidden');
             }
@@ -306,8 +306,8 @@ const Game = {
 
     // Save high score
     saveHighScore() {
-        const initials = document.getElementById('initials').value || 'AAA';
-        Storage.addHighScore(initials, this.score);
+        const name = document.getElementById('player-name').value || 'Player';
+        Storage.addHighScore(name, this.score);
         document.getElementById('new-highscore').classList.add('hidden');
     },
 
