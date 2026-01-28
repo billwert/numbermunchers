@@ -597,6 +597,7 @@ body {
 .grid-cell:hover {
     background: var(--color-cell-hover);
     transform: scale(1.02);
+    z-index: 25;
 }
 
 .grid-cell .number {
