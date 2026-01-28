@@ -336,7 +336,8 @@ body {
 .highscores-list .score { color: var(--color-rainbow-5); flex-shrink: 0; }
 
 .back-btn {
-    margin-top: 30px;
+    display: block;
+    margin: 30px auto 0;
     padding: 15px 40px;
     font-size: 1.2rem;
     font-family: var(--font-main);
