@@ -145,10 +145,18 @@ const Grid = {
             return { success: false, isCorrect: false, value: null };
         }
 
+        // Animate the number flying to muncher's mouth
+        const cellElement = this.getCellElement(x, y);
+        if (cellElement) {
+            const numberSpan = cellElement.querySelector('.number');
+            if (numberSpan && numberSpan.textContent) {
+                this.animateNumberToMouth(cellElement, numberSpan.textContent);
+            }
+        }
+
         cell.munched = true;
 
         // Animate the cell
-        const cellElement = this.getCellElement(x, y);
         if (cellElement) {
             cellElement.classList.add(cell.isCorrect ? 'correct-munch' : 'incorrect-munch');
             cellElement.classList.add('munched');
@@ -164,6 +172,54 @@ const Grid = {
             isCorrect: cell.isCorrect,
             value: cell.value
         };
+    },
+
+    // Animate number flying into muncher's mouth
+    animateNumberToMouth(cellElement, value) {
+        // Create flying number element
+        const flyingNumber = document.createElement('div');
+        flyingNumber.className = 'flying-number';
+        flyingNumber.textContent = value;
+        
+        // Get cell position
+        const cellRect = cellElement.getBoundingClientRect();
+        const gridRect = this.element.getBoundingClientRect();
+        
+        // Position at cell center (relative to grid wrapper)
+        const startX = cellRect.left - gridRect.left + cellRect.width / 2;
+        const startY = cellRect.top - gridRect.top + cellRect.height / 2;
+        
+        flyingNumber.style.left = startX + 'px';
+        flyingNumber.style.top = startY + 'px';
+        flyingNumber.style.transform = 'translate(-50%, -50%)';
+        
+        // Calculate destination (muncher's mouth)
+        const muncherRect = this.muncherSprite.getBoundingClientRect();
+        const mouthX = muncherRect.left - gridRect.left + muncherRect.width / 2;
+        const mouthY = muncherRect.top - gridRect.top + muncherRect.height * 0.7;
+        
+        // Set CSS variables for animation
+        const flyX = mouthX - startX;
+        const flyY = mouthY - startY;
+        flyingNumber.style.setProperty('--fly-x', flyX + 'px');
+        flyingNumber.style.setProperty('--fly-y', flyY + 'px');
+        
+        // Add to grid wrapper
+        this.element.parentElement.appendChild(flyingNumber);
+        
+        // Open muncher's mouth
+        this.muncherSprite.classList.add('eating');
+        
+        // Trigger animation
+        requestAnimationFrame(() => {
+            flyingNumber.classList.add('animate');
+        });
+        
+        // Remove after animation
+        setTimeout(() => {
+            flyingNumber.remove();
+            this.muncherSprite.classList.remove('eating');
+        }, 300);
     },
 
     // Check if all correct numbers have been munched
@@ -210,10 +266,14 @@ const Grid = {
             this.cellSize = firstCell.offsetWidth;
             this.gridGap = parseInt(getComputedStyle(this.element).gap) || 4;
         }
+        
+        // Account for grid border (3px) + padding (10px)
+        const gridBorder = 3;
+        const offset = this.gridPadding + gridBorder;
 
         return {
-            x: this.gridPadding + x * (this.cellSize + this.gridGap),
-            y: this.gridPadding + y * (this.cellSize + this.gridGap)
+            x: offset + x * (this.cellSize + this.gridGap),
+            y: offset + y * (this.cellSize + this.gridGap)
         };
     },
 
