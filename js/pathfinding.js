@@ -130,11 +130,6 @@ const Pathfinding = {
         this.pathExecuting = false;
         this.currentPath = null;
 
-        // Munch at destination if there's a number
-        if (typeof Game !== 'undefined' && Game.state === 'playing') {
-            Game.handleMunch();
-        }
-
         if (onComplete) onComplete(true);
     },
 
@@ -159,12 +154,6 @@ const Pathfinding = {
         this.cancelPath();
 
         const muncherPos = Game.muncher.getPosition();
-
-        // If clicking current cell, just munch
-        if (targetX === muncherPos.x && targetY === muncherPos.y) {
-            Game.handleMunch();
-            return true;
-        }
 
         // Get current Troggle positions as obstacles
         const obstacles = Troggle.getPositions();

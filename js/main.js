@@ -77,6 +77,15 @@ const Main = {
         Input.onAnyKey = () => {
             this.showScreen('menu');
         };
+        
+        // Add click handler for splash screen
+        const splashScreen = document.getElementById('splash-screen');
+        const splashClickHandler = () => {
+            if (this.currentScreen === 'splash') {
+                this.showScreen('menu');
+            }
+        };
+        splashScreen.addEventListener('click', splashClickHandler);
     },
 
     // Set up menu input
@@ -157,6 +166,23 @@ const Main = {
         Input.onAction = () => {
             this.showScreen('menu');
         };
+        
+        // Add ESC key support for settings screen
+        Input.onPause = () => {
+            if (this.currentScreen === 'settings') {
+                // Return from settings
+                if (this.cameFromPause) {
+                    // Return to paused game from settings
+                    this.cameFromPause = false;
+                    this.showScreen('game');
+                    document.getElementById('pause-overlay').classList.add('active');
+                    // Re-setup game input handlers including pause
+                    Game.setupInputHandlers();
+                } else {
+                    this.showScreen('menu');
+                }
+            }
+        };
 
         Input.onMove = null;
         Input.onAnyKey = null;
@@ -230,6 +256,8 @@ const Main = {
                     this.cameFromPause = false;
                     this.showScreen('game');
                     document.getElementById('pause-overlay').classList.add('active');
+                    // Re-setup game input handlers including pause
+                    Game.setupInputHandlers();
                 } else {
                     this.showScreen('menu');
                 }

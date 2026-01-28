@@ -72,11 +72,16 @@ const Grid = {
                         const cellX = parseInt(cell.dataset.x);
                         const cellY = parseInt(cell.dataset.y);
 
-                        // Check if autopilot is enabled
-                        if (Game.mouseAutopilot && typeof Pathfinding !== 'undefined') {
+                        // If clicking on muncher's current cell, munch
+                        if (cellX === Game.muncher.x && cellY === Game.muncher.y) {
+                            if (Input.onAction) Input.onAction();
+                        }
+                        // If clicking different cell and autopilot is enabled, auto-path there
+                        else if (Game.mouseAutopilot && typeof Pathfinding !== 'undefined') {
                             Pathfinding.handleAutopilotClick(cellX, cellY);
-                        } else {
-                            // Normal click: move to adjacent or munch current
+                        }
+                        // Otherwise normal click: move to adjacent only
+                        else {
                             Input.handleGridClick(cellX, cellY, Game.muncher.x, Game.muncher.y);
                         }
                     }

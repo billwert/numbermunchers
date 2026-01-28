@@ -106,8 +106,11 @@ const Game = {
         };
 
         Input.onAction = () => {
-            if (this.state !== 'playing') return;
-            this.handleMunch();
+            if (this.state === 'playing') {
+                this.handleMunch();
+            } else if (this.state === 'levelcomplete') {
+                this.nextLevel();
+            }
         };
 
         Input.onPause = () => {
