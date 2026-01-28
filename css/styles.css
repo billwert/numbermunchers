@@ -104,12 +104,13 @@ body {
 
 .game-title {
     font-family: var(--font-display);
-    font-size: clamp(2rem, 8vw, 4rem);
+    font-size: clamp(1.5rem, 6vw, 4rem);
     margin-bottom: 30px;
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     justify-content: center;
-    gap: 4px;
+    gap: 2px;
+    white-space: nowrap;
 }
 
 .game-title .letter {
@@ -118,15 +119,15 @@ body {
     animation-delay: calc(var(--delay) * 0.08s);
     opacity: 0;
     transform: translateY(-50px);
-    text-shadow: 3px 3px 0 var(--color-rainbow-1),
-                 6px 6px 0 var(--color-rainbow-2);
+    text-shadow: 2px 2px 0 var(--color-rainbow-1),
+                 4px 4px 0 var(--color-rainbow-2);
 }
 
 .game-title .letter:nth-child(odd) { color: var(--color-rainbow-5); }
 .game-title .letter:nth-child(even) { color: var(--color-rainbow-3); }
 
 .game-title .space {
-    width: 20px;
+    width: 10px;
 }
 
 @keyframes bounce-in {
@@ -182,11 +183,11 @@ body {
     width: 50px;
     height: 25px;
     background: #333;
-    border-radius: 0 0 50px 50px;
+    border-radius: 10px 10px 50px 50px;
     bottom: 25px;
     left: 50%;
     transform: translateX(-50%);
-    animation: chomp 0.5s ease-in-out infinite;
+    animation: chomp 0.8s ease-in-out infinite;
 }
 
 @keyframes float {

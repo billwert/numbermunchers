@@ -14,6 +14,9 @@ const Sound = {
     musicPlaying: false,
     musicNodes: [],
     musicInterval: null,
+    
+    // Track if music should be playing (survives interruption)
+    musicShouldBePlaying: false,
 
     // Storage key
     STORAGE_KEY: 'numberMunchersSoundSettings',
@@ -26,8 +29,15 @@ const Sound = {
             this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
             this.loadSettings();
             
-            // Try to resume audio automatically when app returns from background
-            // This works on desktop; iOS may still require user gesture
+            // Listen for state changes to handle interruption recovery
+            this.audioContext.onstatechange = () => {
+                if (this.audioContext.state === 'running' && this.musicShouldBePlaying && !this.musicInterval) {
+                    // Context resumed and music should be playing - restart it
+                    this.startMusic();
+                }
+            };
+            
+            // Try to resume audio when app returns from background
             document.addEventListener('visibilitychange', () => {
                 if (document.visibilityState === 'visible') {
                     this.resume();
@@ -44,8 +54,13 @@ const Sound = {
         
         // Handle both 'suspended' (desktop) and 'interrupted' (iOS Safari) states
         const state = this.audioContext.state;
-        if (state === 'suspended' || state === 'interrupted') {
-            this.audioContext.resume().catch(e => {
+        if (state !== 'running') {
+            this.audioContext.resume().then(() => {
+                // If music should be playing but interval stopped, restart it
+                if (this.musicShouldBePlaying && !this.musicInterval) {
+                    this.startMusic();
+                }
+            }).catch(e => {
                 console.warn('Failed to resume audio:', e);
             });
         }
@@ -286,6 +301,7 @@ const Sound = {
         if (!this.audioContext || this.musicPlaying) return;
 
         this.musicPlaying = true;
+        this.musicShouldBePlaying = true;
         this.currentNoteIndex = 0;
 
         const noteDuration = 0.15; // seconds per note
@@ -293,6 +309,9 @@ const Sound = {
 
         this.musicInterval = setInterval(() => {
             if (!this.musicPlaying || this.musicVolume === 0) return;
+            
+            // Don't try to play if context isn't running
+            if (this.audioContext.state !== 'running') return;
 
             const melodyFreq = this.melodyNotes[this.currentNoteIndex];
             const bassFreq = this.bassNotes[this.currentNoteIndex];
@@ -335,6 +354,7 @@ const Sound = {
     // Stop background music
     stopMusic() {
         this.musicPlaying = false;
+        this.musicShouldBePlaying = false;
         if (this.musicInterval) {
             clearInterval(this.musicInterval);
             this.musicInterval = null;
