@@ -148,9 +148,9 @@ const Input = {
        TOUCH INPUT
        ----------------------------------------- */
     setupTouch() {
-        // Initialize sound on first touch (required for iOS)
+        // iOS requires AudioContext to be created/resumed on touchend or click, not touchstart
         let soundInitialized = false;
-        const initSoundOnTouch = () => {
+        const initSoundOnInteraction = () => {
             if (!soundInitialized && typeof Sound !== 'undefined') {
                 Sound.init();
                 Sound.resume();
@@ -158,12 +158,13 @@ const Input = {
             }
         };
 
-        // Swipe detection on game grid
+        // Initialize sound on first click/touchend (iOS requirement)
+        document.addEventListener('click', initSoundOnInteraction, { once: false, capture: true });
+        document.addEventListener('touchend', initSoundOnInteraction, { passive: true });
+
+        // Swipe detection
         document.addEventListener('touchstart', (e) => {
             if (!this.enabled) return;
-
-            // Initialize sound on first touch (iOS requirement)
-            initSoundOnTouch();
 
             // Any touch callback (for splash screen)
             if (this.onAnyKey) {

@@ -83,6 +83,11 @@ const Sound = {
     playTone(frequency, duration, type = 'square', volume = 1) {
         if (!this.audioContext || this.sfxVolume === 0) return;
 
+        // Ensure context is running (iOS may suspend it)
+        if (this.audioContext.state === 'suspended') {
+            this.audioContext.resume();
+        }
+
         const oscillator = this.audioContext.createOscillator();
         const gainNode = this.audioContext.createGain();
 
@@ -120,6 +125,11 @@ const Sound = {
     // Correct munch - chomping sound
     playMunchCorrect() {
         if (!this.audioContext || this.sfxVolume === 0) return;
+
+        // Ensure context is running (iOS may suspend it)
+        if (this.audioContext.state === 'suspended') {
+            this.audioContext.resume();
+        }
 
         // Create a "chomp" sound with noise burst and pitch bend
         const now = this.audioContext.currentTime;
