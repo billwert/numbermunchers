@@ -23,10 +23,16 @@ const Levels = {
         const multiple = this.getMultiple(level);
         const numbers = [];
 
-        // Determine how many correct answers to include (40-60% of grid)
-        const minCorrect = Math.floor(gridSize * 0.35);
-        const maxCorrect = Math.floor(gridSize * 0.55);
-        const correctCount = minCorrect + Math.floor(Math.random() * (maxCorrect - minCorrect + 1));
+        // Testing mode: only 1 correct answer
+        let correctCount;
+        if (typeof Game !== 'undefined' && Game.testingMode) {
+            correctCount = 1;
+        } else {
+            // Determine how many correct answers to include (40-60% of grid)
+            const minCorrect = Math.floor(gridSize * 0.35);
+            const maxCorrect = Math.floor(gridSize * 0.55);
+            correctCount = minCorrect + Math.floor(Math.random() * (maxCorrect - minCorrect + 1));
+        }
 
         // Generate correct multiples
         const correctNumbers = this.generateMultiples(multiple, correctCount, level);

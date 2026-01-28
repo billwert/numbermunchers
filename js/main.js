@@ -318,6 +318,15 @@ const Main = {
                 Storage.saveSettings({ mouseAutopilot: autopilotCheckbox.checked });
             }
         });
+
+        // Testing mode
+        const testingModeCheckbox = document.getElementById('testing-mode');
+        testingModeCheckbox.addEventListener('change', () => {
+            if (typeof Game !== 'undefined') {
+                Game.testingMode = testingModeCheckbox.checked;
+                Storage.saveSettings({ testingMode: testingModeCheckbox.checked });
+            }
+        });
     },
 
     // Load settings values into UI
@@ -331,6 +340,7 @@ const Main = {
         const musicDisplay = document.getElementById('music-volume-display');
         const sfxDisplay = document.getElementById('sfx-volume-display');
         const autopilotCheckbox = document.getElementById('mouse-autopilot');
+        const testingModeCheckbox = document.getElementById('testing-mode');
 
         // Load current values
         const musicValue = Math.round(Sound.musicVolume * 100);
@@ -341,12 +351,14 @@ const Main = {
         musicDisplay.textContent = musicValue + '%';
         sfxDisplay.textContent = sfxValue + '%';
 
-        // Load autopilot setting from storage
+        // Load settings from storage
         const settings = Storage.getSettings();
         if (typeof Game !== 'undefined') {
             Game.mouseAutopilot = settings.mouseAutopilot || false;
+            Game.testingMode = settings.testingMode || false;
         }
         autopilotCheckbox.checked = settings.mouseAutopilot || false;
+        testingModeCheckbox.checked = settings.testingMode || false;
     },
 
     // Load settings when app starts (for game settings that need to persist)
@@ -354,6 +366,7 @@ const Main = {
         const settings = Storage.getSettings();
         if (typeof Game !== 'undefined') {
             Game.mouseAutopilot = settings.mouseAutopilot || false;
+            Game.testingMode = settings.testingMode || false;
         }
     }
 };

@@ -15,6 +15,7 @@ const Game = {
 
     // Settings
     mouseAutopilot: false,
+    testingMode: false,
 
     // Muncher reference
     muncher: Muncher,
