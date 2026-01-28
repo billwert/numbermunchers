@@ -14,6 +14,9 @@ const Main = {
         // Initialize game
         Game.init();
 
+        // Load saved game settings
+        this.loadGameSettings();
+
         // Set up button click handlers
         this.setupButtonHandlers();
 
@@ -291,9 +294,19 @@ const Main = {
         musicDisplay.textContent = musicValue + '%';
         sfxDisplay.textContent = sfxValue + '%';
 
-        // Load autopilot setting
+        // Load autopilot setting from storage
+        const settings = Storage.getSettings();
         if (typeof Game !== 'undefined') {
-            autopilotCheckbox.checked = Game.mouseAutopilot || false;
+            Game.mouseAutopilot = settings.mouseAutopilot || false;
+        }
+        autopilotCheckbox.checked = settings.mouseAutopilot || false;
+    },
+
+    // Load settings when app starts (for game settings that need to persist)
+    loadGameSettings() {
+        const settings = Storage.getSettings();
+        if (typeof Game !== 'undefined') {
+            Game.mouseAutopilot = settings.mouseAutopilot || false;
         }
     }
 };

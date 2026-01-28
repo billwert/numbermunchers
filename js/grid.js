@@ -71,7 +71,14 @@ const Grid = {
                     if (typeof Game !== 'undefined' && Game.state === 'playing') {
                         const cellX = parseInt(cell.dataset.x);
                         const cellY = parseInt(cell.dataset.y);
-                        Input.handleGridClick(cellX, cellY, Game.muncher.x, Game.muncher.y);
+
+                        // Check if autopilot is enabled
+                        if (Game.mouseAutopilot && typeof Pathfinding !== 'undefined') {
+                            Pathfinding.handleAutopilotClick(cellX, cellY);
+                        } else {
+                            // Normal click: move to adjacent or munch current
+                            Input.handleGridClick(cellX, cellY, Game.muncher.x, Game.muncher.y);
+                        }
                     }
                 });
 

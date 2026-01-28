@@ -4,6 +4,7 @@
 
 const Storage = {
     STORAGE_KEY: 'numberMunchersHighScores',
+    SETTINGS_KEY: 'numberMunchersSettings',
     MAX_SCORES: 10,
 
     // Get all high scores
@@ -80,5 +81,29 @@ const Storage = {
             return scores.length + 1;
         }
         return -1;
+    },
+
+    // Get gameplay settings
+    getSettings() {
+        try {
+            const data = localStorage.getItem(this.SETTINGS_KEY);
+            if (data) {
+                return JSON.parse(data);
+            }
+        } catch (e) {
+            console.warn('Failed to load settings:', e);
+        }
+        return { mouseAutopilot: false };
+    },
+
+    // Save gameplay settings
+    saveSettings(settings) {
+        try {
+            const current = this.getSettings();
+            const merged = { ...current, ...settings };
+            localStorage.setItem(this.SETTINGS_KEY, JSON.stringify(merged));
+        } catch (e) {
+            console.warn('Failed to save settings:', e);
+        }
     }
 };
