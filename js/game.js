@@ -286,6 +286,15 @@ const Game = {
     // Pause menu state
     pauseSelectedIndex: 0,
 
+    // Toggle pause state
+    togglePause() {
+        if (this.state === 'playing') {
+            this.pause();
+        } else if (this.state === 'paused') {
+            this.resume();
+        }
+    },
+
     // Pause game
     pause() {
         if (this.state !== 'playing') return;

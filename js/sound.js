@@ -25,6 +25,13 @@ const Sound = {
         try {
             this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
             this.loadSettings();
+            
+            // Resume audio when app returns from background (iOS)
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible') {
+                    this.resume();
+                }
+            });
         } catch (e) {
             console.warn('Web Audio API not supported:', e);
         }
