@@ -47,6 +47,7 @@ const Input = {
             // Any key callback (for splash screen) - but not when typing
             if (this.onAnyKey && !isTyping) {
                 this.onAnyKey();
+                return; // Don't process this key further
             }
 
             // Don't capture game keys when typing in an input
