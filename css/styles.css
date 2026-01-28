@@ -624,6 +624,8 @@ body {
    ========================================= */
 .muncher-sprite {
     position: absolute;
+    top: 0;
+    left: 0;
     width: var(--cell-size);
     height: var(--cell-size);
     pointer-events: none;

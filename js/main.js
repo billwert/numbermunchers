@@ -6,6 +6,7 @@ const Main = {
     currentScreen: 'splash',
     selectedMenuIndex: 0,
     menuOptions: ['new-game', 'high-scores', 'how-to-play', 'settings'],
+    cameFromPause: false,  // Track if settings was opened from pause menu
 
     init() {
         // Initialize input system
@@ -82,6 +83,11 @@ const Main = {
     setupMenuInput() {
         this.selectedMenuIndex = 0;
         this.updateMenuSelection();
+
+        // Start background music on menu (requires user interaction first)
+        Sound.init();
+        Sound.resume();
+        Sound.startMusic();
 
         Input.clearCallbacks();
 
@@ -219,7 +225,20 @@ const Main = {
                 this.selectMenuOption('settings');
                 break;
             case 'back-to-menu':
-                this.showScreen('menu');
+                if (this.cameFromPause) {
+                    // Return to paused game from settings
+                    this.cameFromPause = false;
+                    this.showScreen('game');
+                    document.getElementById('pause-overlay').classList.add('active');
+                } else {
+                    this.showScreen('menu');
+                }
+                break;
+            case 'pause-settings':
+                // Open settings from pause menu
+                this.cameFromPause = true;
+                document.getElementById('pause-overlay').classList.remove('active');
+                this.showScreen('settings');
                 break;
             case 'resume':
                 Game.resume();
