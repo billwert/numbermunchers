@@ -26,8 +26,13 @@ const Sound = {
             this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
             this.loadSettings();
             
-            // iOS suspends audio when app goes to background
-            // Audio will be resumed on next user interaction via Input.js handlers
+            // Try to resume audio automatically when app returns from background
+            // This works on desktop; iOS may still require user gesture
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible') {
+                    this.resume();
+                }
+            });
         } catch (e) {
             console.warn('Web Audio API not supported:', e);
         }
