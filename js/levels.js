@@ -42,12 +42,22 @@ const Levels = {
         const incorrectNumbers = this.generateNonMultiples(multiple, incorrectCount, level);
 
         // Combine and shuffle
-        const allNumbers = [
+        let allNumbers = [
             ...correctNumbers.map(n => ({ value: n, isCorrect: true })),
             ...incorrectNumbers.map(n => ({ value: n, isCorrect: false }))
         ];
 
-        return this.shuffle(allNumbers);
+        allNumbers = this.shuffle(allNumbers);
+
+        // In testing mode, put the correct answer at position 0,0 (first in array)
+        if (typeof Game !== 'undefined' && Game.testingMode) {
+            const correctIndex = allNumbers.findIndex(n => n.isCorrect);
+            if (correctIndex > 0) {
+                [allNumbers[0], allNumbers[correctIndex]] = [allNumbers[correctIndex], allNumbers[0]];
+            }
+        }
+
+        return allNumbers;
     },
 
     // Generate multiples of a number
