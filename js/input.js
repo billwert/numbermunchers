@@ -148,11 +148,22 @@ const Input = {
        TOUCH INPUT
        ----------------------------------------- */
     setupTouch() {
-        const gameGrid = document.getElementById('game-grid');
+        // Initialize sound on first touch (required for iOS)
+        let soundInitialized = false;
+        const initSoundOnTouch = () => {
+            if (!soundInitialized && typeof Sound !== 'undefined') {
+                Sound.init();
+                Sound.resume();
+                soundInitialized = true;
+            }
+        };
 
         // Swipe detection on game grid
         document.addEventListener('touchstart', (e) => {
             if (!this.enabled) return;
+
+            // Initialize sound on first touch (iOS requirement)
+            initSoundOnTouch();
 
             // Any touch callback (for splash screen)
             if (this.onAnyKey) {
@@ -186,24 +197,8 @@ const Input = {
             }
         }, { passive: true });
 
-        // Touch controls buttons
-        document.querySelectorAll('.touch-btn[data-direction]').forEach(btn => {
-            btn.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                if (!this.enabled) return;
-                const direction = btn.dataset.direction;
-                if (this.onMove) this.onMove(direction);
-            });
-        });
-
-        const munchBtn = document.querySelector('.touch-btn[data-action="munch"]');
-        if (munchBtn) {
-            munchBtn.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                if (!this.enabled) return;
-                if (this.onAction) this.onAction();
-            });
-        }
+        // Grid cell touch handlers are set up in grid.js via click events
+        // (click events fire on touch too after touchend)
     },
 
     /* -----------------------------------------

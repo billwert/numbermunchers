@@ -18,6 +18,13 @@ const Grid = {
     gridGap: 4,
     gridPadding: 10,
 
+    // Detect touch device
+    isTouchDevice() {
+        return ('ontouchstart' in window) || 
+               (navigator.maxTouchPoints > 0) || 
+               (window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+    },
+
     init() {
         this.element = document.getElementById('game-grid');
         this.muncherSprite = document.getElementById('muncher-sprite');
@@ -41,7 +48,6 @@ const Grid = {
         if (!gameScreen.classList.contains('active')) return;
 
         const header = document.querySelector('.game-header');
-        const touchControls = document.getElementById('touch-controls');
         
         // Get available space
         const viewportWidth = window.innerWidth;
@@ -51,13 +57,9 @@ const Grid = {
         // Calculate header height
         const headerHeight = header ? header.offsetHeight + 15 : 0; // +15 for gap
         
-        // Check if touch controls are visible
-        const touchHeight = (touchControls && getComputedStyle(touchControls).display !== 'none') 
-            ? touchControls.offsetHeight + 15 : 0;
-        
-        // Available space for grid
+        // Available space for grid (no touch controls anymore)
         const availableWidth = viewportWidth - padding * 2;
-        const availableHeight = viewportHeight - headerHeight - touchHeight - padding * 2;
+        const availableHeight = viewportHeight - headerHeight - padding * 2;
         
         // Grid has 6 columns, 5 rows, gaps, padding, and border
         const gridPadding = 10;
@@ -126,7 +128,7 @@ const Grid = {
                 numberSpan.className = 'number';
                 cell.appendChild(numberSpan);
 
-                // Click handler
+                // Click/tap handler - works for both mouse and touch
                 cell.addEventListener('click', () => {
                     if (typeof Game !== 'undefined' && Game.state === 'playing') {
                         const cellX = parseInt(cell.dataset.x);
@@ -136,9 +138,11 @@ const Grid = {
                         if (cellX === Game.muncher.x && cellY === Game.muncher.y) {
                             if (Input.onAction) Input.onAction();
                         }
-                        // If clicking different cell and autopilot is enabled, auto-path there
-                        else if (Game.mouseAutopilot && typeof Pathfinding !== 'undefined') {
-                            Pathfinding.handleAutopilotClick(cellX, cellY);
+                        // On touch devices or with autopilot enabled, path to any cell
+                        else if (this.isTouchDevice() || Game.mouseAutopilot) {
+                            if (typeof Pathfinding !== 'undefined') {
+                                Pathfinding.handleAutopilotClick(cellX, cellY);
+                            }
                         }
                         // Otherwise normal click: move to adjacent only
                         else {
