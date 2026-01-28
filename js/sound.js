@@ -117,14 +117,47 @@ const Sound = {
         this.playTone(440, 0.05, 'sine', 0.3);
     },
 
-    // Correct munch - happy ascending notes
+    // Correct munch - chomping sound
     playMunchCorrect() {
         if (!this.audioContext || this.sfxVolume === 0) return;
-        this.playSequence([
-            { freq: 523, duration: 0.08 },  // C5
-            { freq: 659, duration: 0.08 },  // E5
-            { freq: 784, duration: 0.15 }   // G5
-        ], 0.07);
+
+        // Create a "chomp" sound with noise burst and pitch bend
+        const now = this.audioContext.currentTime;
+        
+        // Main chomp oscillator - starts high, drops quickly
+        const osc = this.audioContext.createOscillator();
+        const gain = this.audioContext.createGain();
+        
+        osc.connect(gain);
+        gain.connect(this.audioContext.destination);
+        
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(400, now);
+        osc.frequency.exponentialRampToValueAtTime(80, now + 0.08);
+        
+        gain.gain.setValueAtTime(this.sfxVolume * 0.4, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+        
+        osc.start(now);
+        osc.stop(now + 0.12);
+        
+        // Second chomp for "om nom" effect
+        const osc2 = this.audioContext.createOscillator();
+        const gain2 = this.audioContext.createGain();
+        
+        osc2.connect(gain2);
+        gain2.connect(this.audioContext.destination);
+        
+        osc2.type = 'square';
+        osc2.frequency.setValueAtTime(350, now + 0.08);
+        osc2.frequency.exponentialRampToValueAtTime(60, now + 0.16);
+        
+        gain2.gain.setValueAtTime(0, now);
+        gain2.gain.setValueAtTime(this.sfxVolume * 0.35, now + 0.08);
+        gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+        
+        osc2.start(now + 0.08);
+        osc2.stop(now + 0.2);
     },
 
     // Incorrect munch - buzzer
