@@ -506,6 +506,7 @@ body {
 }
 
 .game-header {
+    position: relative;
     width: 100%;
     max-width: calc(6 * var(--cell-size) + 5 * var(--grid-gap) + 26px);
     text-align: center;
@@ -560,6 +561,31 @@ body {
 .lives {
     font-size: clamp(0.9rem, 2.5vmin, 1.2rem);
     letter-spacing: 2px;
+}
+
+/* Pause Button */
+.pause-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 44px;
+    height: 44px;
+    font-size: 1.5rem;
+    background: var(--color-cell-bg);
+    border: 2px solid var(--color-cell-border);
+    border-radius: var(--border-radius);
+    color: var(--color-text);
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pause-btn:hover,
+.pause-btn:active {
+    background: var(--color-primary);
+    transform: scale(1.05);
 }
 
 /* =========================================

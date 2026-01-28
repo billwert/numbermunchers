@@ -301,6 +301,16 @@ const Main = {
             });
         });
 
+        // Pause button
+        const pauseBtn = document.getElementById('pause-btn');
+        if (pauseBtn) {
+            pauseBtn.addEventListener('click', () => {
+                if (typeof Game !== 'undefined' && Game.state === 'playing') {
+                    Game.togglePause();
+                }
+            });
+        }
+
         // Menu option hover
         document.querySelectorAll('.menu-options .menu-btn').forEach((btn, i) => {
             btn.addEventListener('mouseenter', () => {
