@@ -956,6 +956,11 @@ body {
     border-color: var(--color-primary);
 }
 
+.name-input.selected input {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 15px rgba(76, 175, 80, 0.5);
+}
+
 .name-input input::placeholder {
     color: var(--color-text-muted);
     opacity: 0.7;

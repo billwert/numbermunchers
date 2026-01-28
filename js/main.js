@@ -192,43 +192,47 @@ const Main = {
     setupGameOverInput() {
         Input.clearCallbacks();
         
-        // Track which button is selected
-        this.gameOverSelectedIndex = 0;
+        // Track which item is selected (-1 = name input, 0+ = buttons)
+        // Start at -1 (name input) if high score, otherwise 0 (first button)
+        const newHighscoreDiv = document.getElementById('new-highscore');
+        const isHighScore = !newHighscoreDiv.classList.contains('hidden');
+        this.gameOverSelectedIndex = isHighScore ? -1 : 0;
         this.updateGameOverSelection();
 
         Input.onMove = (direction) => {
-            const nameInput = document.getElementById('player-name');
-            // Don't navigate buttons while typing name
-            if (document.activeElement === nameInput) {
-                return;
-            }
-            
-            const buttons = this.getGameOverButtons();
+            const items = this.getGameOverItems();
             if (direction === 'up') {
-                this.gameOverSelectedIndex = Math.max(0, this.gameOverSelectedIndex - 1);
+                this.gameOverSelectedIndex = Math.max(-1, this.gameOverSelectedIndex - 1);
+                // Skip -1 if no high score input
+                if (this.gameOverSelectedIndex === -1 && !this.isHighScoreInputVisible()) {
+                    this.gameOverSelectedIndex = 0;
+                }
             } else if (direction === 'down') {
-                this.gameOverSelectedIndex = Math.min(buttons.length - 1, this.gameOverSelectedIndex + 1);
+                this.gameOverSelectedIndex = Math.min(items.length - 1, this.gameOverSelectedIndex + 1);
             }
             this.updateGameOverSelection();
         };
 
         Input.onAction = () => {
             const nameInput = document.getElementById('player-name');
-            const newHighscoreDiv = document.getElementById('new-highscore');
             
-            // If typing name, Enter saves the score
-            if (document.activeElement === nameInput) {
-                Game.saveHighScore();
-                nameInput.blur();
-                this.gameOverSelectedIndex = 0;
-                this.updateGameOverSelection();
+            // If name input is selected, focus it or save if already focused
+            if (this.gameOverSelectedIndex === -1) {
+                if (document.activeElement === nameInput) {
+                    Game.saveHighScore();
+                    nameInput.blur();
+                    this.gameOverSelectedIndex = 0;
+                    this.updateGameOverSelection();
+                } else {
+                    nameInput.focus();
+                }
                 return;
             }
             
             // Otherwise activate the selected button
-            const buttons = this.getGameOverButtons();
-            if (buttons[this.gameOverSelectedIndex]) {
-                const action = buttons[this.gameOverSelectedIndex].dataset.action;
+            const items = this.getGameOverItems();
+            if (items[this.gameOverSelectedIndex]) {
+                const action = items[this.gameOverSelectedIndex].dataset.action;
                 this.handleButtonAction(action);
             }
         };
@@ -236,15 +240,20 @@ const Main = {
         Input.onAnyKey = null;
     },
     
-    // Get visible game over buttons
-    getGameOverButtons() {
+    // Check if high score input is visible
+    isHighScoreInputVisible() {
+        const newHighscoreDiv = document.getElementById('new-highscore');
+        return !newHighscoreDiv.classList.contains('hidden');
+    },
+    
+    // Get visible game over buttons (not including name input)
+    getGameOverItems() {
         const newHighscoreDiv = document.getElementById('new-highscore');
         const isHighScore = !newHighscoreDiv.classList.contains('hidden');
         const saveScoreBtn = document.querySelector('#new-highscore .menu-btn[data-action="save-score"]');
         
-        // Only include save button if high score section is visible and score not yet saved
         const buttons = [];
-        if (isHighScore && saveScoreBtn && !saveScoreBtn.closest('#new-highscore').classList.contains('saved')) {
+        if (isHighScore && saveScoreBtn) {
             buttons.push(saveScoreBtn);
         }
         buttons.push(document.querySelector('#gameover-screen > .gameover-content > .menu-btn[data-action="play-again"]'));
@@ -252,10 +261,24 @@ const Main = {
         return buttons.filter(b => b !== null);
     },
     
-    // Update game over button selection visual
+    // Update game over selection visual
     updateGameOverSelection() {
-        const buttons = this.getGameOverButtons();
-        buttons.forEach((btn, i) => {
+        const nameInput = document.getElementById('player-name');
+        const nameInputContainer = document.querySelector('#new-highscore .name-input');
+        const items = this.getGameOverItems();
+        
+        // Handle name input highlight
+        if (nameInputContainer) {
+            nameInputContainer.classList.toggle('selected', this.gameOverSelectedIndex === -1);
+            if (this.gameOverSelectedIndex === -1) {
+                nameInput.focus();
+            } else {
+                nameInput.blur();
+            }
+        }
+        
+        // Handle button highlights
+        items.forEach((btn, i) => {
             btn.classList.toggle('selected', i === this.gameOverSelectedIndex);
         });
     },
@@ -300,6 +323,13 @@ const Main = {
                     }
                 }
             });
+        });
+        
+        // Level complete overlay - click anywhere to continue
+        document.getElementById('level-complete-overlay').addEventListener('click', () => {
+            if (typeof Game !== 'undefined' && Game.state === 'levelcomplete') {
+                this.handleButtonAction('next-level');
+            }
         });
     },
 
