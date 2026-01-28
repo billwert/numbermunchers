@@ -67,6 +67,9 @@ const Game = {
     startLevel() {
         this.state = 'playing';
 
+        // Scale grid to viewport
+        Grid.scaleToViewport();
+
         // Update rule display
         this.elements.rule.textContent = Levels.getRuleText(this.level);
 

@@ -23,6 +23,66 @@ const Grid = {
         this.muncherSprite = document.getElementById('muncher-sprite');
         this.createCells();
         this.calculateDimensions();
+        this.setupResizeHandler();
+    },
+
+    // Set up window resize handler
+    setupResizeHandler() {
+        window.addEventListener('resize', () => {
+            this.scaleToViewport();
+        });
+        // Initial scale
+        this.scaleToViewport();
+    },
+
+    // Scale the grid to fill the viewport
+    scaleToViewport() {
+        const gameScreen = document.getElementById('game-screen');
+        if (!gameScreen.classList.contains('active')) return;
+
+        const header = document.querySelector('.game-header');
+        const touchControls = document.getElementById('touch-controls');
+        
+        // Get available space
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+        const padding = 20; // Padding around edges
+        
+        // Calculate header height
+        const headerHeight = header ? header.offsetHeight + 15 : 0; // +15 for gap
+        
+        // Check if touch controls are visible
+        const touchHeight = (touchControls && getComputedStyle(touchControls).display !== 'none') 
+            ? touchControls.offsetHeight + 15 : 0;
+        
+        // Available space for grid
+        const availableWidth = viewportWidth - padding * 2;
+        const availableHeight = viewportHeight - headerHeight - touchHeight - padding * 2;
+        
+        // Grid has 6 columns, 5 rows, gaps, padding, and border
+        const gridPadding = 10;
+        const gridBorder = 3;
+        const gap = Math.max(2, Math.min(6, availableWidth * 0.005));
+        
+        // Calculate cell size to fit
+        const cellFromWidth = (availableWidth - gridPadding * 2 - gridBorder * 2 - gap * 5) / 6;
+        const cellFromHeight = (availableHeight - gridPadding * 2 - gridBorder * 2 - gap * 4) / 5;
+        
+        const cellSize = Math.floor(Math.min(cellFromWidth, cellFromHeight));
+        
+        // Set CSS variable
+        document.documentElement.style.setProperty('--cell-size', cellSize + 'px');
+        document.documentElement.style.setProperty('--grid-gap', gap + 'px');
+        
+        // Update cached dimensions
+        this.cellSize = cellSize;
+        this.gridGap = gap;
+        
+        // Update muncher position if game is active
+        if (typeof Game !== 'undefined' && Game.muncher) {
+            const pos = Game.muncher.getPosition();
+            this.updateMuncherPosition(pos.x, pos.y);
+        }
     },
 
     // Calculate cell dimensions from computed styles

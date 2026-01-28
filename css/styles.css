@@ -36,11 +36,9 @@
     --color-muncher-dark: #2E7D32;
     --color-troggle: #FF5722;
 
-    /* Sizing - scale based on viewport 
-       Grid is 6 columns x 5 rows
-       Use vmin to scale with smaller viewport dimension */
-    --cell-size: clamp(40px, 12vmin, 150px);
-    --grid-gap: clamp(2px, 0.5vmin, 6px);
+    /* Sizing - JS will override these for game screen */
+    --cell-size: 60px;
+    --grid-gap: 4px;
     --border-radius: 12px;
 
     /* Fonts */
