@@ -194,9 +194,11 @@ const Grid = {
         flyingNumber.style.transform = 'translate(-50%, -50%)';
         
         // Calculate destination (muncher's mouth)
+        // Muncher body is 80% of cell, centered. Mouth is at bottom: 18% of body.
+        // So mouth center is roughly at: 10% (top margin) + 80% * 0.75 = 70% from top
         const muncherRect = this.muncherSprite.getBoundingClientRect();
         const mouthX = muncherRect.left - gridRect.left + muncherRect.width / 2;
-        const mouthY = muncherRect.top - gridRect.top + muncherRect.height * 0.7;
+        const mouthY = muncherRect.top - gridRect.top + muncherRect.height * 0.6;
         
         // Set CSS variables for animation
         const flyX = mouthX - startX;
