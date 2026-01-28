@@ -315,11 +315,25 @@ const Main = {
         document.querySelectorAll('#gameover-screen .menu-btn').forEach(btn => {
             btn.addEventListener('mouseenter', () => {
                 if (this.currentScreen === 'gameover') {
-                    const buttons = this.getGameOverButtons();
+                    const buttons = this.getGameOverItems();
                     const index = buttons.indexOf(btn);
                     if (index !== -1) {
                         this.gameOverSelectedIndex = index;
                         this.updateGameOverSelection();
+                    }
+                }
+            });
+        });
+        
+        // Pause menu button hover
+        document.querySelectorAll('#pause-overlay .menu-btn').forEach(btn => {
+            btn.addEventListener('mouseenter', () => {
+                if (typeof Game !== 'undefined' && Game.state === 'paused') {
+                    const buttons = Game.getPauseButtons();
+                    const index = buttons.indexOf(btn);
+                    if (index !== -1) {
+                        Game.pauseSelectedIndex = index;
+                        Game.updatePauseSelection();
                     }
                 }
             });

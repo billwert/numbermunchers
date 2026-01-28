@@ -280,6 +280,9 @@ const Game = {
         this.startLevel();
     },
 
+    // Pause menu state
+    pauseSelectedIndex: 0,
+
     // Pause game
     pause() {
         if (this.state !== 'playing') return;
@@ -287,6 +290,53 @@ const Game = {
         this.state = 'paused';
         Troggle.stopMovement();
         document.getElementById('pause-overlay').classList.add('active');
+        
+        // Set up pause menu navigation
+        this.pauseSelectedIndex = 0;
+        this.updatePauseSelection();
+        this.setupPauseInput();
+    },
+    
+    // Set up pause menu input handlers
+    setupPauseInput() {
+        Input.clearCallbacks();
+        
+        Input.onMove = (direction) => {
+            const buttons = this.getPauseButtons();
+            if (direction === 'up') {
+                this.pauseSelectedIndex = Math.max(0, this.pauseSelectedIndex - 1);
+            } else if (direction === 'down') {
+                this.pauseSelectedIndex = Math.min(buttons.length - 1, this.pauseSelectedIndex + 1);
+            }
+            this.updatePauseSelection();
+        };
+        
+        Input.onAction = () => {
+            const buttons = this.getPauseButtons();
+            if (buttons[this.pauseSelectedIndex]) {
+                const action = buttons[this.pauseSelectedIndex].dataset.action;
+                Main.handleButtonAction(action);
+            }
+        };
+        
+        Input.onPause = () => {
+            this.resume();
+        };
+        
+        Input.onAnyKey = null;
+    },
+    
+    // Get pause menu buttons
+    getPauseButtons() {
+        return Array.from(document.querySelectorAll('#pause-overlay .menu-btn'));
+    },
+    
+    // Update pause menu selection visual
+    updatePauseSelection() {
+        const buttons = this.getPauseButtons();
+        buttons.forEach((btn, i) => {
+            btn.classList.toggle('selected', i === this.pauseSelectedIndex);
+        });
     },
 
     // Resume game
@@ -295,6 +345,12 @@ const Game = {
 
         document.getElementById('pause-overlay').classList.remove('active');
         this.state = 'playing';
+        
+        // Clear pause selection
+        this.getPauseButtons().forEach(btn => btn.classList.remove('selected'));
+        
+        // Restore game input handlers
+        this.setupInputHandlers();
 
         const speed = Levels.getTroggleSpeed(this.level);
         Troggle.startMovement(speed);
