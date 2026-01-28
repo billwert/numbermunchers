@@ -27,26 +27,23 @@ const Sound = {
             this.loadSettings();
             
             // iOS suspends audio when app goes to background
-            // We need to resume on next user interaction after returning
-            document.addEventListener('visibilitychange', () => {
-                if (document.visibilityState === 'visible') {
-                    this.needsResume = true;
-                }
-            });
+            // Audio will be resumed on next user interaction via Input.js handlers
         } catch (e) {
             console.warn('Web Audio API not supported:', e);
         }
     },
-    
-    // Flag to track if we need to resume after background
-    needsResume: false,
 
     // Ensure audio context is running (call after user gesture)
     resume() {
-        if (this.audioContext && this.audioContext.state === 'suspended') {
-            this.audioContext.resume();
+        if (!this.audioContext) return;
+        
+        // Handle both 'suspended' (desktop) and 'interrupted' (iOS Safari) states
+        const state = this.audioContext.state;
+        if (state === 'suspended' || state === 'interrupted') {
+            this.audioContext.resume().catch(e => {
+                console.warn('Failed to resume audio:', e);
+            });
         }
-        this.needsResume = false;
     },
 
     // Load settings from localStorage

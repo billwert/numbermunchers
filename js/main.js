@@ -301,18 +301,28 @@ const Main = {
             });
         });
 
-        // Pause button - use both click and touchend for mobile compatibility
+        // Pause button - prevent double-fire from touchend + click
         const pauseBtn = document.getElementById('pause-btn');
         if (pauseBtn) {
-            const handlePause = (e) => {
+            let pauseTouchHandled = false;
+            
+            pauseBtn.addEventListener('touchend', (e) => {
                 e.preventDefault();
-                e.stopPropagation();
+                pauseTouchHandled = true;
                 if (typeof Game !== 'undefined' && Game.state === 'playing') {
                     Game.togglePause();
                 }
-            };
-            pauseBtn.addEventListener('click', handlePause);
-            pauseBtn.addEventListener('touchend', handlePause);
+                // Reset flag after a short delay (click fires ~300ms after touch)
+                setTimeout(() => { pauseTouchHandled = false; }, 400);
+            });
+            
+            pauseBtn.addEventListener('click', (e) => {
+                // Skip if we already handled this via touchend
+                if (pauseTouchHandled) return;
+                if (typeof Game !== 'undefined' && Game.state === 'playing') {
+                    Game.togglePause();
+                }
+            });
         }
 
         // Menu option hover
