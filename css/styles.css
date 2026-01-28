@@ -37,9 +37,9 @@
     --color-troggle: #FF5722;
 
     /* Sizing - scale based on viewport 
-       Grid is 6 columns x 5 rows, need to fit with gaps and padding
-       Also need room for header (~120px) and touch controls (~100px) */
-    --cell-size: min(calc((100vw - 80px) / 6.5), calc((100vh - 280px) / 5.5));
+       Grid is 6 columns x 5 rows
+       Use vmin to scale with smaller viewport dimension */
+    --cell-size: clamp(40px, 12vmin, 150px);
     --grid-gap: clamp(2px, 0.5vmin, 6px);
     --border-radius: 12px;
 
