@@ -754,6 +754,7 @@ body {
 .grid-cell.muncher-cell {
     background: rgba(76, 175, 80, 0.2);
     border-color: var(--color-muncher);
+    z-index: 25;
 }
 
 /* Troggle in cell */
