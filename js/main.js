@@ -301,14 +301,18 @@ const Main = {
             });
         });
 
-        // Pause button
+        // Pause button - use both click and touchend for mobile compatibility
         const pauseBtn = document.getElementById('pause-btn');
         if (pauseBtn) {
-            pauseBtn.addEventListener('click', () => {
+            const handlePause = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
                 if (typeof Game !== 'undefined' && Game.state === 'playing') {
                     Game.togglePause();
                 }
-            });
+            };
+            pauseBtn.addEventListener('click', handlePause);
+            pauseBtn.addEventListener('touchend', handlePause);
         }
 
         // Menu option hover

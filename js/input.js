@@ -148,19 +148,18 @@ const Input = {
        TOUCH INPUT
        ----------------------------------------- */
     setupTouch() {
-        // iOS requires AudioContext to be created/resumed on touchend or click, not touchstart
-        let soundInitialized = false;
-        const initSoundOnInteraction = () => {
-            if (!soundInitialized && typeof Sound !== 'undefined') {
+        // iOS requires AudioContext to be created/resumed on touchend or click
+        // Also need to resume after app returns from background
+        const ensureSoundActive = () => {
+            if (typeof Sound !== 'undefined') {
                 Sound.init();
                 Sound.resume();
-                soundInitialized = true;
             }
         };
 
-        // Initialize sound on first click/touchend (iOS requirement)
-        document.addEventListener('click', initSoundOnInteraction, { once: false, capture: true });
-        document.addEventListener('touchend', initSoundOnInteraction, { passive: true });
+        // Resume sound on any click/touchend (handles both init and background resume)
+        document.addEventListener('click', ensureSoundActive, { capture: true });
+        document.addEventListener('touchend', ensureSoundActive, { passive: true });
 
         // Swipe detection
         document.addEventListener('touchstart', (e) => {

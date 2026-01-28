@@ -26,22 +26,27 @@ const Sound = {
             this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
             this.loadSettings();
             
-            // Resume audio when app returns from background (iOS)
+            // iOS suspends audio when app goes to background
+            // We need to resume on next user interaction after returning
             document.addEventListener('visibilitychange', () => {
                 if (document.visibilityState === 'visible') {
-                    this.resume();
+                    this.needsResume = true;
                 }
             });
         } catch (e) {
             console.warn('Web Audio API not supported:', e);
         }
     },
+    
+    // Flag to track if we need to resume after background
+    needsResume: false,
 
     // Ensure audio context is running (call after user gesture)
     resume() {
         if (this.audioContext && this.audioContext.state === 'suspended') {
             this.audioContext.resume();
         }
+        this.needsResume = false;
     },
 
     // Load settings from localStorage
