@@ -5,7 +5,7 @@
 const Main = {
     currentScreen: 'splash',
     selectedMenuIndex: 0,
-    menuOptions: ['new-game', 'high-scores', 'how-to-play'],
+    menuOptions: ['new-game', 'high-scores', 'how-to-play', 'settings'],
 
     init() {
         // Initialize input system
@@ -16,6 +16,9 @@ const Main = {
 
         // Set up button click handlers
         this.setupButtonHandlers();
+
+        // Set up settings UI
+        this.setupSettingsUI();
 
         // Show splash screen
         this.showScreen('splash');
@@ -49,6 +52,10 @@ const Main = {
                 this.setupBackInput();
                 break;
             case 'howtoplay':
+                this.setupBackInput();
+                break;
+            case 'settings':
+                this.loadSettingsUI();
                 this.setupBackInput();
                 break;
             case 'game':
@@ -101,6 +108,8 @@ const Main = {
 
     // Handle menu option selection
     selectMenuOption(action) {
+        Sound.playMenuSelect();
+
         switch (action) {
             case 'new-game':
                 this.showScreen('game');
@@ -111,6 +120,9 @@ const Main = {
                 break;
             case 'how-to-play':
                 this.showScreen('howtoplay');
+                break;
+            case 'settings':
+                this.showScreen('settings');
                 break;
         }
     },
@@ -188,6 +200,8 @@ const Main = {
 
     // Handle button actions
     handleButtonAction(action) {
+        Sound.playMenuSelect();
+
         switch (action) {
             case 'new-game':
                 this.selectMenuOption('new-game');
@@ -197,6 +211,9 @@ const Main = {
                 break;
             case 'how-to-play':
                 this.selectMenuOption('how-to-play');
+                break;
+            case 'settings':
+                this.selectMenuOption('settings');
                 break;
             case 'back-to-menu':
                 this.showScreen('menu');
@@ -217,6 +234,66 @@ const Main = {
                 this.showScreen('game');
                 Game.startNewGame();
                 break;
+        }
+    },
+
+    // Set up settings UI event handlers
+    setupSettingsUI() {
+        const musicSlider = document.getElementById('music-volume');
+        const sfxSlider = document.getElementById('sfx-volume');
+        const musicDisplay = document.getElementById('music-volume-display');
+        const sfxDisplay = document.getElementById('sfx-volume-display');
+        const autopilotCheckbox = document.getElementById('mouse-autopilot');
+
+        // Music volume
+        musicSlider.addEventListener('input', () => {
+            const value = parseInt(musicSlider.value);
+            musicDisplay.textContent = value + '%';
+            Sound.setMusicVolume(value / 100);
+        });
+
+        // SFX volume
+        sfxSlider.addEventListener('input', () => {
+            const value = parseInt(sfxSlider.value);
+            sfxDisplay.textContent = value + '%';
+            Sound.setSfxVolume(value / 100);
+            // Play test sound
+            Sound.playMove();
+        });
+
+        // Mouse autopilot
+        autopilotCheckbox.addEventListener('change', () => {
+            if (typeof Game !== 'undefined') {
+                Game.mouseAutopilot = autopilotCheckbox.checked;
+                Storage.saveSettings({ mouseAutopilot: autopilotCheckbox.checked });
+            }
+        });
+    },
+
+    // Load settings values into UI
+    loadSettingsUI() {
+        // Initialize sound if not already (requires user interaction)
+        Sound.init();
+        Sound.resume();
+
+        const musicSlider = document.getElementById('music-volume');
+        const sfxSlider = document.getElementById('sfx-volume');
+        const musicDisplay = document.getElementById('music-volume-display');
+        const sfxDisplay = document.getElementById('sfx-volume-display');
+        const autopilotCheckbox = document.getElementById('mouse-autopilot');
+
+        // Load current values
+        const musicValue = Math.round(Sound.musicVolume * 100);
+        const sfxValue = Math.round(Sound.sfxVolume * 100);
+
+        musicSlider.value = musicValue;
+        sfxSlider.value = sfxValue;
+        musicDisplay.textContent = musicValue + '%';
+        sfxDisplay.textContent = sfxValue + '%';
+
+        // Load autopilot setting
+        if (typeof Game !== 'undefined') {
+            autopilotCheckbox.checked = Game.mouseAutopilot || false;
         }
     }
 };

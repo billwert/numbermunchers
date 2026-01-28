@@ -13,6 +13,9 @@ const Game = {
     correctInARow: 0,
     lastExtraLifeScore: 0,
 
+    // Settings
+    mouseAutopilot: false,
+
     // Muncher reference
     muncher: Muncher,
 
@@ -49,6 +52,11 @@ const Game = {
         this.level = 1;
         this.correctInARow = 0;
         this.lastExtraLifeScore = 0;
+
+        // Initialize and start sound/music
+        Sound.init();
+        Sound.resume();
+        Sound.startMusic();
 
         this.updateDisplay();
         this.startLevel();
@@ -88,7 +96,10 @@ const Game = {
     setupInputHandlers() {
         Input.onMove = (direction) => {
             if (this.state !== 'playing') return;
-            this.muncher.move(direction);
+            const moved = this.muncher.move(direction);
+            if (moved) {
+                Sound.playMove();
+            }
 
             // Check collision after move
             this.checkTroggleCollision();
@@ -122,6 +133,7 @@ const Game = {
         if (result.isCorrect) {
             // Correct munch!
             this.correctInARow++;
+            Sound.playMunchCorrect();
 
             // Add points
             const points = Levels.getPointsForMunch(this.level);
@@ -142,6 +154,7 @@ const Game = {
         } else {
             // Wrong munch!
             this.correctInARow = 0;
+            Sound.playMunchWrong();
 
             // Lose a life
             this.loseLife();
@@ -173,6 +186,7 @@ const Game = {
             this.lives = Math.min(this.lives + 1, 9); // Max 9 lives
             this.showFeedback('Extra Life!', 'correct');
             this.lastExtraLifeScore = this.score;
+            Sound.playExtraLife();
         }
     },
 
@@ -199,6 +213,7 @@ const Game = {
     handleTroggleCollision() {
         this.correctInARow = 0;
         this.showFeedback('Caught!', 'incorrect');
+        Sound.playTroggleHit();
 
         // Screen shake
         document.getElementById('game-screen').classList.add('screen-shake');
@@ -222,6 +237,9 @@ const Game = {
 
         // Stop Troggles
         Troggle.stopMovement();
+
+        // Play level complete sound
+        Sound.playLevelComplete();
 
         // Add bonus points
         const bonus = Levels.getLevelClearBonus(this.level);
@@ -284,6 +302,8 @@ const Game = {
 
         // Stop everything
         Troggle.stopMovement();
+        Sound.stopMusic();
+        Sound.playGameOver();
 
         // Show game over screen
         setTimeout(() => {
@@ -315,6 +335,7 @@ const Game = {
     quitToMenu() {
         this.state = 'idle';
         Troggle.clear();
+        Sound.stopMusic();
         document.getElementById('pause-overlay').classList.remove('active');
         document.getElementById('level-complete-overlay').classList.remove('active');
         Main.showScreen('menu');

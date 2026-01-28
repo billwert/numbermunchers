@@ -52,6 +52,9 @@
                 <button class="menu-btn" data-action="how-to-play">
                     <span class="btn-icon">❓</span> How to Play
                 </button>
+                <button class="menu-btn" data-action="settings">
+                    <span class="btn-icon">⚙️</span> Settings
+                </button>
             </nav>
             <div class="menu-footer">
                 <p>Use Arrow Keys & Enter, Click, or Tap</p>
@@ -98,6 +101,47 @@
                 </div>
             </div>
             <button class="back-btn" data-action="back-to-menu">Got it!</button>
+        </div>
+    </div>
+
+    <!-- Settings Screen -->
+    <div id="settings-screen" class="screen">
+        <div class="settings-content">
+            <h1 class="screen-title">Settings</h1>
+
+            <div class="settings-section">
+                <h2>Sound</h2>
+
+                <div class="setting-item">
+                    <label for="music-volume">
+                        <span class="setting-icon">🎵</span> Music
+                    </label>
+                    <input type="range" id="music-volume" min="0" max="100" value="50">
+                    <span id="music-volume-display" class="volume-display">50%</span>
+                </div>
+
+                <div class="setting-item">
+                    <label for="sfx-volume">
+                        <span class="setting-icon">🔊</span> Sound Effects
+                    </label>
+                    <input type="range" id="sfx-volume" min="0" max="100" value="70">
+                    <span id="sfx-volume-display" class="volume-display">70%</span>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h2>Gameplay</h2>
+
+                <div class="setting-item checkbox-item">
+                    <label for="mouse-autopilot">
+                        <span class="setting-icon">🖱️</span> Mouse Autopilot
+                        <span class="setting-hint">Click any cell to auto-path there</span>
+                    </label>
+                    <input type="checkbox" id="mouse-autopilot">
+                </div>
+            </div>
+
+            <button class="back-btn" data-action="back-to-menu">Save & Back</button>
         </div>
     </div>
 
@@ -201,6 +245,7 @@
 
     <!-- Scripts -->
     <script src="js/storage.js"></script>
+    <script src="js/sound.js"></script>
     <script src="js/input.js"></script>
     <script src="js/levels.js"></script>
     <script src="js/grid.js"></script>
