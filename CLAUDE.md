@@ -1,5 +1,9 @@
 # Number Munchers - Project Documentation for Claude
 
+## Workflow
+
+- **Always commit and push** after finishing a turn so the user can test via GitHub Pages
+
 ## Project Overview
 A kid-friendly educational math game inspired by the classic "Number Munchers" from MECC. Players navigate a grid, "munching" (eating) numbers that match mathematical rules while avoiding enemies called Troggles.
 

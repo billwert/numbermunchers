@@ -93,7 +93,7 @@ const Storage = {
         } catch (e) {
             console.warn('Failed to load settings:', e);
         }
-        return { mouseAutopilot: false };
+        return { mouseAutopilot: true };
     },
 
     // Save gameplay settings

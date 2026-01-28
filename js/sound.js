@@ -36,13 +36,9 @@ const Sound = {
                     this.startMusic();
                 }
             };
-            
-            // Try to resume audio when app returns from background
-            document.addEventListener('visibilitychange', () => {
-                if (document.visibilityState === 'visible') {
-                    this.resume();
-                }
-            });
+
+            // Note: Visibility change is handled by Main.setupResumeOverlay()
+            // which shows a "Tap to Continue" overlay to get the required user gesture
         } catch (e) {
             console.warn('Web Audio API not supported:', e);
         }

@@ -24,9 +24,74 @@ const Main = {
         // Set up settings UI
         this.setupSettingsUI();
 
+        // Set up resume overlay for background return
+        this.setupResumeOverlay();
+
         // Show splash screen
         this.showScreen('splash');
         this.setupSplashInput();
+    },
+
+    // Set up resume overlay for when app returns from background
+    setupResumeOverlay() {
+        const resumeOverlay = document.getElementById('resume-overlay');
+
+        // Handle visibility change (app going to background and returning)
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                // Check if we should show the resume overlay
+                // Show it if we're on the game screen and not already paused/gameover
+                if (this.currentScreen === 'game' &&
+                    typeof Game !== 'undefined' &&
+                    (Game.state === 'playing' || Game.state === 'paused' || Game.state === 'levelcomplete')) {
+                    this.showResumeOverlay();
+                }
+            }
+        });
+
+        // Handle click on resume overlay
+        resumeOverlay.addEventListener('click', () => {
+            this.hideResumeOverlay();
+        });
+
+        // Also handle touch for mobile
+        resumeOverlay.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            this.hideResumeOverlay();
+        });
+    },
+
+    // Show the resume overlay
+    showResumeOverlay() {
+        const resumeOverlay = document.getElementById('resume-overlay');
+        resumeOverlay.classList.add('active');
+
+        // Pause the game while overlay is shown (if it was playing)
+        if (typeof Game !== 'undefined' && Game.state === 'playing') {
+            Game.state = 'paused';
+            // Don't show the pause overlay - just pause internally
+        }
+    },
+
+    // Hide the resume overlay and resume audio
+    hideResumeOverlay() {
+        const resumeOverlay = document.getElementById('resume-overlay');
+        resumeOverlay.classList.remove('active');
+
+        // Resume audio (this tap provides the required user gesture)
+        Sound.init();
+        Sound.resume();
+
+        // Resume game if it was paused by the overlay
+        if (typeof Game !== 'undefined' && Game.state === 'paused') {
+            // Check if the actual pause overlay is showing
+            const pauseOverlay = document.getElementById('pause-overlay');
+            if (!pauseOverlay.classList.contains('active')) {
+                // User wasn't in pause menu, so resume playing
+                Game.state = 'playing';
+            }
+            // If pause overlay is showing, keep paused (user paused before backgrounding)
+        }
     },
 
     // Show a specific screen
