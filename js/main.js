@@ -179,7 +179,7 @@ const Main = {
                 break;
             case 'settings':
                 this.loadSettingsUI();
-                this.setupBackInput();
+                this.setupSettingsInput();
                 break;
             case 'game':
                 // Game handles its own input
@@ -628,6 +628,109 @@ const Main = {
             Game.mouseAutopilot = settings.mouseAutopilot || false;
             Game.testingMode = settings.testingMode || false;
         }
+    },
+
+    // Settings navigation state
+    settingsSelectedIndex: 0,
+
+    // Get all navigable settings items (sliders, checkboxes, back button)
+    getSettingsItems() {
+        const screen = document.getElementById('settings-screen');
+        const items = [];
+        
+        // Add all setting-item elements (sliders and checkboxes)
+        screen.querySelectorAll('.setting-item').forEach(item => {
+            const input = item.querySelector('input');
+            if (input) {
+                items.push({
+                    element: item,
+                    input: input,
+                    type: input.type === 'checkbox' ? 'checkbox' : 'slider'
+                });
+            }
+        });
+        
+        // Add back button
+        const backBtn = screen.querySelector('.back-btn');
+        if (backBtn) {
+            items.push({
+                element: backBtn,
+                input: backBtn,
+                type: 'button'
+            });
+        }
+        
+        return items;
+    },
+
+    // Update settings selection visual
+    updateSettingsSelection() {
+        const items = this.getSettingsItems();
+        items.forEach((item, i) => {
+            item.element.classList.toggle('selected', i === this.settingsSelectedIndex);
+        });
+    },
+
+    // Set up settings screen keyboard navigation
+    setupSettingsInput() {
+        Input.clearCallbacks();
+        
+        this.settingsSelectedIndex = 0;
+        this.updateSettingsSelection();
+
+        Input.onMove = (direction) => {
+            const items = this.getSettingsItems();
+            const currentItem = items[this.settingsSelectedIndex];
+            
+            if (direction === 'up') {
+                this.settingsSelectedIndex = Math.max(0, this.settingsSelectedIndex - 1);
+                this.updateSettingsSelection();
+            } else if (direction === 'down') {
+                this.settingsSelectedIndex = Math.min(items.length - 1, this.settingsSelectedIndex + 1);
+                this.updateSettingsSelection();
+            } else if (direction === 'left' || direction === 'right') {
+                // Adjust slider values
+                if (currentItem && currentItem.type === 'slider') {
+                    const slider = currentItem.input;
+                    const step = direction === 'right' ? 5 : -5;
+                    const newValue = Math.max(0, Math.min(100, parseInt(slider.value) + step));
+                    slider.value = newValue;
+                    // Trigger input event to update display and sound
+                    slider.dispatchEvent(new Event('input'));
+                }
+            }
+        };
+
+        Input.onAction = () => {
+            const items = this.getSettingsItems();
+            const currentItem = items[this.settingsSelectedIndex];
+            
+            if (currentItem) {
+                if (currentItem.type === 'checkbox') {
+                    // Toggle checkbox
+                    currentItem.input.checked = !currentItem.input.checked;
+                    currentItem.input.dispatchEvent(new Event('change'));
+                } else if (currentItem.type === 'button') {
+                    // Activate button
+                    this.handleButtonAction(currentItem.input.dataset.action);
+                }
+            }
+        };
+
+        Input.onPause = () => {
+            // ESC key - return from settings
+            if (this.cameFromPause) {
+                this.cameFromPause = false;
+                this.showScreen('game');
+                document.getElementById('pause-overlay').classList.add('active');
+                document.getElementById('game-grid').classList.add('paused');
+                Game.setupPauseInput();
+            } else {
+                this.showScreen('menu');
+            }
+        };
+
+        Input.onAnyKey = null;
     }
 };
 
