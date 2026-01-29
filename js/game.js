@@ -44,6 +44,11 @@ const Game = {
 
         // Initialize Troggles
         Troggle.init();
+
+        // Initialize GameLoop
+        if (typeof GameLoop !== 'undefined') {
+            GameLoop.init();
+        }
     },
 
     // Start a new game
@@ -54,10 +59,10 @@ const Game = {
         this.correctInARow = 0;
         this.lastExtraLifeScore = 0;
 
-        // Initialize and start sound/music
+        // Initialize and start sound/music with level-based variation
         Sound.init();
         Sound.resume();
-        Sound.startMusic();
+        Sound.startMusicForLevel(this.level);
 
         this.updateDisplay();
         this.startLevel();
@@ -73,6 +78,9 @@ const Game = {
         // Update rule display
         this.elements.rule.textContent = Levels.getRuleText(this.level);
 
+        // Clear any previous special cells
+        Grid.clearSpecialCells();
+
         // Populate grid
         Grid.populate(this.level);
 
@@ -82,13 +90,32 @@ const Game = {
         this.muncher.init(startX, startY);
         Grid.updateMuncherPosition(startX, startY);
 
-        // Spawn Troggles
-        const troggleCount = Levels.getTroggleCount(this.level);
-        Troggle.spawn(troggleCount, [{ x: startX, y: startY }]);
+        // Initialize safety squares
+        if (typeof SafetySquares !== 'undefined') {
+            SafetySquares.init(this.level);
+        }
 
-        // Start Troggle movement
-        const speed = Levels.getTroggleSpeed(this.level);
-        Troggle.startMovement(speed);
+        // Initialize Troggle spawner and clear old troggles
+        Troggle.clear();
+        if (typeof TroggleSpawner !== 'undefined') {
+            TroggleSpawner.init(this.level);
+        }
+
+        // Spawn initial Troggle (one starts immediately, rest spawn over time)
+        const troggleCount = Levels.getTroggleCount(this.level);
+        if (troggleCount > 0) {
+            // Spawn just one Troggle initially
+            Troggle.spawn(1, [{ x: startX, y: startY }]);
+        }
+
+        // Start game loop (handles Troggle movement and spawning)
+        if (typeof GameLoop !== 'undefined') {
+            GameLoop.start(this.level);
+        } else {
+            // Fallback to old movement system
+            const speed = Levels.getTroggleSpeed(this.level);
+            Troggle.startMovement(speed);
+        }
 
         // Set up input handlers
         this.setupInputHandlers();
@@ -242,8 +269,16 @@ const Game = {
     completeLevel() {
         this.state = 'levelcomplete';
 
-        // Stop Troggles
+        // Stop game loop and troggles
+        if (typeof GameLoop !== 'undefined') {
+            GameLoop.stop();
+        }
         Troggle.stopMovement();
+
+        // Cancel any pending spawns
+        if (typeof TroggleSpawner !== 'undefined') {
+            TroggleSpawner.cancelPending();
+        }
 
         // Play level complete sound
         Sound.playLevelComplete();
@@ -280,6 +315,10 @@ const Game = {
     nextLevel() {
         document.getElementById('level-complete-overlay').classList.remove('active');
         this.level++;
+
+        // Update music for new level
+        Sound.updateMusicForLevel(this.level);
+
         this.startLevel();
     },
 
@@ -373,7 +412,13 @@ const Game = {
         this.state = 'gameover';
 
         // Stop everything
+        if (typeof GameLoop !== 'undefined') {
+            GameLoop.stop();
+        }
         Troggle.stopMovement();
+        if (typeof TroggleSpawner !== 'undefined') {
+            TroggleSpawner.cancelPending();
+        }
         Sound.stopMusic();
         Sound.playGameOver();
 
@@ -406,7 +451,26 @@ const Game = {
     // Quit to menu
     quitToMenu() {
         this.state = 'idle';
+
+        // Stop game loop
+        if (typeof GameLoop !== 'undefined') {
+            GameLoop.stop();
+        }
+
+        // Clear troggles and spawner
         Troggle.clear();
+        if (typeof TroggleSpawner !== 'undefined') {
+            TroggleSpawner.clear();
+        }
+
+        // Clear safety squares
+        if (typeof SafetySquares !== 'undefined') {
+            SafetySquares.clear();
+        }
+
+        // Clear special cell markers
+        Grid.clearSpecialCells();
+
         Sound.stopMusic();
         document.getElementById('pause-overlay').classList.remove('active');
         document.getElementById('level-complete-overlay').classList.remove('active');

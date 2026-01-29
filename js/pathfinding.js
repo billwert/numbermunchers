@@ -175,5 +175,41 @@ const Pathfinding = {
             Game.showFeedback('No path!', 'incorrect');
             return false;
         }
+    },
+
+    // Recalculate path around updated Troggle positions (called by GameLoop)
+    recalculatePath() {
+        if (!this.pathExecuting || !this.currentPath || this.currentPath.length === 0) {
+            return;
+        }
+
+        // Get the final destination from current path
+        const destination = this.currentPath[this.currentPath.length - 1];
+        if (!destination) return;
+
+        const muncherPos = Game.muncher.getPosition();
+
+        // Get updated Troggle positions as obstacles
+        const obstacles = Troggle.getPositions();
+
+        // Check if current next step is now blocked
+        if (this.currentPath.length > 0) {
+            const nextStep = this.currentPath[0];
+            const isBlocked = obstacles.some(o => o.x === nextStep.x && o.y === nextStep.y);
+
+            if (isBlocked) {
+                // Try to find a new path
+                const newPath = this.findPath(muncherPos.x, muncherPos.y, destination.x, destination.y, obstacles);
+
+                if (newPath && newPath.length > 0) {
+                    // Update the current path
+                    this.currentPath = newPath;
+                } else {
+                    // No path available - cancel autopilot
+                    this.cancelPath();
+                    Game.showFeedback('Path blocked!', 'incorrect');
+                }
+            }
+        }
     }
 };

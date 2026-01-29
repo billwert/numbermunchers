@@ -40,6 +40,11 @@ const Input = {
         document.addEventListener('keydown', (e) => {
             if (!this.enabled) return;
 
+            // Let browser handle modified keys (Ctrl+C, Alt+D, etc.)
+            if (e.ctrlKey || e.altKey || e.metaKey) {
+                return;
+            }
+
             // Check if user is typing in an input field
             const activeEl = document.activeElement;
             const isTyping = activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA');

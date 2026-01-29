@@ -321,6 +321,14 @@ const Grid = {
             this.muncherSprite.style.transform = transform;
             // Store current transform for animations
             this.muncherSprite.style.setProperty('--current-transform', transform);
+
+            // Add transparency when over an unmunched cell (has a number visible)
+            const currentCell = this.getCell(x, y);
+            if (currentCell && !currentCell.munched) {
+                this.muncherSprite.classList.add('over-number');
+            } else {
+                this.muncherSprite.classList.remove('over-number');
+            }
         }
     },
 
@@ -346,9 +354,11 @@ const Grid = {
 
     // Update Troggle positions display
     updateTroggles(troggles) {
-        // Clear all Troggle markers
+        // Clear all Troggle markers and type classes
         this.element.querySelectorAll('.has-troggle').forEach(cell => {
-            cell.classList.remove('has-troggle');
+            cell.classList.remove('has-troggle', 'troggle-reggie', 'troggle-bashful',
+                'troggle-helper', 'troggle-worker', 'troggle-smartie');
+            cell.removeAttribute('data-troggle-emoji');
         });
 
         // Add Troggle to each position
@@ -356,6 +366,14 @@ const Grid = {
             const cell = this.getCellElement(troggle.x, troggle.y);
             if (cell) {
                 cell.classList.add('has-troggle');
+                // Add type-specific class
+                if (troggle.type) {
+                    cell.classList.add(`troggle-${troggle.type}`);
+                }
+                // Set emoji for CSS to use
+                if (troggle.emoji) {
+                    cell.setAttribute('data-troggle-emoji', troggle.emoji);
+                }
             }
         });
     },
@@ -393,5 +411,43 @@ const Grid = {
         }
 
         return available[Math.floor(Math.random() * available.length)];
+    },
+
+    // Mark/unmark a cell as a safety square
+    markSafetySquare(x, y, active) {
+        const cell = this.getCellElement(x, y);
+        if (cell) {
+            if (active) {
+                cell.classList.add('safety-square');
+            } else {
+                cell.classList.remove('safety-square');
+            }
+        }
+    },
+
+    // Show spawn warning indicator at position
+    showSpawnWarning(x, y) {
+        const cell = this.getCellElement(x, y);
+        if (cell) {
+            cell.classList.add('spawn-warning');
+        }
+    },
+
+    // Hide spawn warning indicator at position
+    hideSpawnWarning(x, y) {
+        const cell = this.getCellElement(x, y);
+        if (cell) {
+            cell.classList.remove('spawn-warning');
+        }
+    },
+
+    // Clear all safety squares and spawn warnings
+    clearSpecialCells() {
+        this.element.querySelectorAll('.safety-square').forEach(cell => {
+            cell.classList.remove('safety-square');
+        });
+        this.element.querySelectorAll('.spawn-warning').forEach(cell => {
+            cell.classList.remove('spawn-warning');
+        });
     }
 };

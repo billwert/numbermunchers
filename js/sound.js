@@ -272,58 +272,152 @@ const Sound = {
     },
 
     /* -----------------------------------------
-       BACKGROUND MUSIC
+       BACKGROUND MUSIC - Level-Based Variation
        ----------------------------------------- */
 
-    // Simple chiptune melody notes (in Hz)
-    melodyNotes: [
-        523, 523, 784, 784, 880, 880, 784, 0,   // C C G G A A G -
-        698, 698, 659, 659, 587, 587, 523, 0,   // F F E E D D C -
-        784, 784, 698, 698, 659, 659, 587, 0,   // G G F F E E D -
-        784, 784, 698, 698, 659, 659, 587, 0    // G G F F E E D -
-    ],
+    // Melody patterns for different level ranges
+    melodyPatterns: {
+        // Levels 1-3: Simple, cheerful
+        simple: [
+            523, 523, 784, 784, 880, 880, 784, 0,
+            698, 698, 659, 659, 587, 587, 523, 0
+        ],
+        // Levels 4-6: March rhythm
+        march: [
+            523, 0, 523, 0, 659, 0, 784, 0,
+            880, 0, 784, 0, 659, 0, 523, 0,
+            587, 0, 659, 0, 698, 0, 784, 0,
+            880, 880, 784, 784, 659, 659, 523, 0
+        ],
+        // Levels 7-9: Chase feeling
+        chase: [
+            523, 587, 659, 698, 784, 880, 988, 1047,
+            988, 880, 784, 698, 659, 587, 523, 0,
+            698, 784, 880, 988, 880, 784, 698, 0,
+            523, 659, 784, 880, 784, 659, 523, 0
+        ],
+        // Level 10+: Intense
+        intense: [
+            523, 0, 659, 0, 784, 0, 988, 0,
+            1047, 988, 880, 784, 659, 523, 440, 0,
+            523, 659, 784, 988, 1047, 988, 784, 0,
+            880, 784, 659, 523, 440, 392, 349, 0
+        ]
+    },
 
-    bassNotes: [
-        131, 0, 196, 0, 220, 0, 196, 0,  // C - G - A - G -
-        175, 0, 165, 0, 147, 0, 131, 0,  // F - E - D - C -
-        196, 0, 175, 0, 165, 0, 147, 0,  // G - F - E - D -
-        196, 0, 175, 0, 165, 0, 147, 0   // G - F - E - D -
-    ],
+    // Bass patterns
+    bassPatterns: {
+        simple: [
+            131, 0, 196, 0, 220, 0, 196, 0,
+            175, 0, 165, 0, 147, 0, 131, 0
+        ],
+        march: [
+            131, 131, 0, 0, 165, 165, 0, 0,
+            175, 175, 0, 0, 196, 196, 0, 0,
+            147, 147, 0, 0, 165, 165, 0, 0,
+            175, 0, 196, 0, 165, 0, 131, 0
+        ],
+        chase: [
+            131, 196, 131, 196, 131, 196, 131, 196,
+            175, 220, 175, 220, 175, 220, 175, 0,
+            147, 196, 147, 196, 147, 196, 147, 0,
+            131, 165, 196, 220, 196, 165, 131, 0
+        ],
+        intense: [
+            131, 0, 165, 0, 196, 0, 247, 0,
+            262, 247, 220, 196, 165, 131, 110, 0,
+            131, 165, 196, 247, 262, 247, 196, 0,
+            220, 196, 165, 131, 110, 98, 87, 0
+        ]
+    },
 
+    // Current music state
+    currentMelody: null,
+    currentBass: null,
+    currentWaveform: 'square',
+    currentTempo: 150,
     currentNoteIndex: 0,
+    currentLevel: 1,
 
-    // Start background music
+    // Get pattern name for level
+    getPatternForLevel(level) {
+        if (level <= 3) return 'simple';
+        if (level <= 6) return 'march';
+        if (level <= 9) return 'chase';
+        return 'intense';
+    },
+
+    // Get waveform for level (cycles every 4 levels)
+    getWaveformForLevel(level) {
+        const cycle = (level - 1) % 4;
+        return ['square', 'sawtooth', 'triangle', 'sine'][cycle];
+    },
+
+    // Get tempo for level (faster at higher levels)
+    getTempoForLevel(level) {
+        const baseTempo = 180;  // ms between notes
+        const minTempo = 100;    // fastest
+        const reduction = (level - 1) * 8;
+        return Math.max(minTempo, baseTempo - reduction);
+    },
+
+    // Start music (legacy - uses level 1 settings)
     startMusic() {
+        this.startMusicForLevel(this.currentLevel || 1);
+    },
+
+    // Start music with level-specific settings
+    startMusicForLevel(level) {
         if (!this.audioContext || this.musicPlaying) return;
+
+        this.currentLevel = level;
+        const pattern = this.getPatternForLevel(level);
+        this.currentMelody = this.melodyPatterns[pattern];
+        this.currentBass = this.bassPatterns[pattern];
+        this.currentWaveform = this.getWaveformForLevel(level);
+        this.currentTempo = this.getTempoForLevel(level);
 
         this.musicPlaying = true;
         this.musicShouldBePlaying = true;
         this.currentNoteIndex = 0;
 
-        const noteDuration = 0.15; // seconds per note
-        const noteInterval = 150;  // ms between notes
+        const noteDuration = this.currentTempo / 1000; // Convert to seconds
 
         this.musicInterval = setInterval(() => {
             if (!this.musicPlaying || this.musicVolume === 0) return;
-            
+
             // Don't try to play if context isn't running
             if (this.audioContext.state !== 'running') return;
 
-            const melodyFreq = this.melodyNotes[this.currentNoteIndex];
-            const bassFreq = this.bassNotes[this.currentNoteIndex];
+            const melodyFreq = this.currentMelody[this.currentNoteIndex % this.currentMelody.length];
+            const bassFreq = this.currentBass[this.currentNoteIndex % this.currentBass.length];
 
             // Play melody note
             if (melodyFreq > 0) {
-                this.playMusicNote(melodyFreq, noteDuration, 'square', 0.3);
+                this.playMusicNote(melodyFreq, noteDuration, this.currentWaveform, 0.3);
             }
 
-            // Play bass note
+            // Play bass note (always triangle for consistency)
             if (bassFreq > 0) {
                 this.playMusicNote(bassFreq, noteDuration * 1.5, 'triangle', 0.4);
             }
 
-            this.currentNoteIndex = (this.currentNoteIndex + 1) % this.melodyNotes.length;
-        }, noteInterval);
+            this.currentNoteIndex++;
+        }, this.currentTempo);
+    },
+
+    // Update music when level changes
+    updateMusicForLevel(level) {
+        if (level === this.currentLevel && this.musicPlaying) return;
+
+        const wasPlaying = this.musicShouldBePlaying;
+        this.stopMusic();
+
+        if (wasPlaying) {
+            this.startMusicForLevel(level);
+        } else {
+            this.currentLevel = level;
+        }
     },
 
     // Play a music note (separate from SFX)

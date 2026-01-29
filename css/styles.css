@@ -637,16 +637,19 @@ body {
 }
 
 .grid-cell .number {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     animation: wiggle 2s ease-in-out infinite;
     animation-delay: calc(var(--wiggle-delay) * 0.1s);
-    position: relative;
     z-index: 20;
 }
 
 @keyframes wiggle {
-    0%, 100% { transform: rotate(0deg); }
-    25% { transform: rotate(-3deg); }
-    75% { transform: rotate(3deg); }
+    0%, 100% { transform: translate(-50%, -50%) rotate(0deg); }
+    25% { transform: translate(-50%, -50%) rotate(-3deg); }
+    75% { transform: translate(-50%, -50%) rotate(3deg); }
 }
 
 .grid-cell.munched {
@@ -691,6 +694,12 @@ body {
         inset -5px -5px 15px rgba(0, 0, 0, 0.2),
         inset 5px 5px 15px rgba(255, 255, 255, 0.1);
     border: 3px solid var(--color-muncher-dark);
+    transition: opacity 0.15s ease;
+}
+
+/* Slight transparency when muncher is over an unmunched number */
+.muncher-sprite.over-number .muncher-body {
+    opacity: 0.85;
 }
 
 .muncher-eye {
@@ -793,7 +802,7 @@ body {
     z-index: 25;
 }
 
-/* Troggle in cell */
+/* Troggle in cell - base style */
 .grid-cell.has-troggle {
     background: var(--color-troggle);
     border-color: #BF360C;
@@ -802,13 +811,104 @@ body {
 }
 
 .grid-cell.has-troggle::before {
-    content: '👾';
+    content: attr(data-troggle-emoji);
     font-size: 2rem;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 5;
+}
+
+/* Fallback if no emoji attribute */
+.grid-cell.has-troggle:not([data-troggle-emoji])::before {
+    content: '👾';
+}
+
+/* Troggle type-specific styles */
+.grid-cell.troggle-bashful {
+    background: #9C27B0;
+    border-color: #7B1FA2;
+    box-shadow: 0 0 15px rgba(156, 39, 176, 0.5);
+}
+
+.grid-cell.troggle-helper {
+    background: #8BC34A;
+    border-color: #689F38;
+    box-shadow: 0 0 15px rgba(139, 195, 74, 0.5);
+}
+
+.grid-cell.troggle-worker {
+    background: #607D8B;
+    border-color: #455A64;
+    box-shadow: 0 0 15px rgba(96, 125, 139, 0.5);
+}
+
+.grid-cell.troggle-smartie {
+    background: #F44336;
+    border-color: #D32F2F;
+    box-shadow: 0 0 15px rgba(244, 67, 54, 0.5);
+    animation: troggle-pulse 0.5s ease-in-out infinite;
 }
 
 @keyframes troggle-wobble {
     0%, 100% { transform: translateX(0); }
     50% { transform: translateX(2px); }
+}
+
+@keyframes troggle-pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+}
+
+/* Safety Squares */
+.grid-cell.safety-square {
+    background: linear-gradient(145deg, #FFD700, #FFA500) !important;
+    border-color: #FFD700 !important;
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.6),
+                inset 0 0 10px rgba(255, 255, 255, 0.3) !important;
+}
+
+.grid-cell.safety-square::after {
+    content: '⭐';
+    position: absolute;
+    font-size: 0.8rem;
+    bottom: 2px;
+    right: 2px;
+    opacity: 0.8;
+    z-index: 3;
+}
+
+/* Spawn Warning */
+.grid-cell.spawn-warning {
+    animation: spawn-flash 0.25s ease-in-out infinite;
+}
+
+.grid-cell.spawn-warning::after {
+    content: '⚠️';
+    position: absolute;
+    font-size: 1.2rem;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 30;
+    animation: spawn-warning-pulse 0.25s ease-in-out infinite;
+}
+
+@keyframes spawn-flash {
+    0%, 100% {
+        background: var(--color-cell-bg);
+        border-color: var(--color-cell-border);
+    }
+    50% {
+        background: rgba(255, 87, 34, 0.4);
+        border-color: #FF5722;
+    }
+}
+
+@keyframes spawn-warning-pulse {
+    0%, 100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    50% { opacity: 0.6; transform: translate(-50%, -50%) scale(0.9); }
 }
 
 /* =========================================
