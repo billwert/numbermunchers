@@ -101,12 +101,9 @@ const Game = {
             TroggleSpawner.init(this.level);
         }
 
-        // Spawn initial Troggle (one starts immediately, rest spawn over time)
-        const troggleCount = Levels.getTroggleCount(this.level);
-        if (troggleCount > 0) {
-            // Spawn just one Troggle initially
-            Troggle.spawn(1, [{ x: startX, y: startY }]);
-        }
+        // Don't spawn initial Troggle here - let TroggleSpawner handle all spawns
+        // This prevents double-spawning on level 1
+        // The spawner will spawn one within 5 seconds (maxTimeWithoutTroggle)
 
         // Start game loop (handles Troggle movement and spawning)
         if (typeof GameLoop !== 'undefined') {
@@ -342,6 +339,9 @@ const Game = {
         Troggle.stopMovement();
         document.getElementById('pause-overlay').classList.add('active');
         
+        // Blur numbers to prevent route planning
+        document.getElementById('game-grid').classList.add('paused');
+        
         // Set up pause menu navigation
         this.pauseSelectedIndex = 0;
         this.updatePauseSelection();
@@ -395,6 +395,10 @@ const Game = {
         if (this.state !== 'paused') return;
 
         document.getElementById('pause-overlay').classList.remove('active');
+        
+        // Unblur numbers
+        document.getElementById('game-grid').classList.remove('paused');
+        
         this.state = 'playing';
         
         // Clear pause selection

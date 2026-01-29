@@ -804,20 +804,22 @@ body {
 
 /* Troggle in cell - base style */
 .grid-cell.has-troggle {
-    background: var(--color-troggle);
-    border-color: #BF360C;
-    box-shadow: 0 0 15px rgba(255, 87, 34, 0.5);
-    animation: troggle-wobble 0.3s ease-in-out infinite;
+    background: var(--color-cell-bg);
+    border-color: var(--color-cell-border);
 }
 
+/* Troggle emoji - scaled to cell size */
 .grid-cell.has-troggle::before {
     content: attr(data-troggle-emoji);
-    font-size: 2rem;
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 5;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: calc(var(--cell-size) * 0.6);
+    line-height: 1;
+    z-index: 15;
+    animation: troggle-wobble 0.3s ease-in-out infinite;
 }
 
 /* Fallback if no emoji attribute */
@@ -825,29 +827,24 @@ body {
     content: '👾';
 }
 
-/* Troggle type-specific styles */
+/* Troggle type-specific styles - subtle background tints */
 .grid-cell.troggle-bashful {
-    background: #9C27B0;
-    border-color: #7B1FA2;
-    box-shadow: 0 0 15px rgba(156, 39, 176, 0.5);
+    background: rgba(156, 39, 176, 0.2);
 }
 
 .grid-cell.troggle-helper {
-    background: #8BC34A;
-    border-color: #689F38;
-    box-shadow: 0 0 15px rgba(139, 195, 74, 0.5);
+    background: rgba(139, 195, 74, 0.2);
 }
 
 .grid-cell.troggle-worker {
-    background: #607D8B;
-    border-color: #455A64;
-    box-shadow: 0 0 15px rgba(96, 125, 139, 0.5);
+    background: rgba(96, 125, 139, 0.2);
 }
 
 .grid-cell.troggle-smartie {
-    background: #F44336;
-    border-color: #D32F2F;
-    box-shadow: 0 0 15px rgba(244, 67, 54, 0.5);
+    background: rgba(244, 67, 54, 0.2);
+}
+
+.grid-cell.troggle-smartie::before {
     animation: troggle-pulse 0.5s ease-in-out infinite;
 }
 
@@ -861,22 +858,46 @@ body {
     50% { transform: scale(1.02); }
 }
 
-/* Safety Squares */
+/* Safety Squares - white corner brackets */
 .grid-cell.safety-square {
-    background: linear-gradient(145deg, #FFD700, #FFA500) !important;
-    border-color: #FFD700 !important;
-    box-shadow: 0 0 15px rgba(255, 215, 0, 0.6),
-                inset 0 0 10px rgba(255, 255, 255, 0.3) !important;
+    position: relative;
 }
 
-.grid-cell.safety-square::after {
-    content: '⭐';
+/* Use gradients to create all 4 corner brackets */
+.grid-cell.safety-square::before {
+    content: '';
     position: absolute;
-    font-size: 0.8rem;
-    bottom: 2px;
-    right: 2px;
-    opacity: 0.8;
-    z-index: 3;
+    inset: 0;
+    pointer-events: none;
+    z-index: 5;
+    /* Create corner brackets with linear gradients */
+    background:
+        /* Top-left horizontal */
+        linear-gradient(to right, white 33%, transparent 33%) no-repeat 0 0 / 100% 3px,
+        /* Top-left vertical */
+        linear-gradient(to bottom, white 33%, transparent 33%) no-repeat 0 0 / 3px 100%,
+        /* Top-right horizontal */
+        linear-gradient(to left, white 33%, transparent 33%) no-repeat 100% 0 / 100% 3px,
+        /* Top-right vertical */
+        linear-gradient(to bottom, white 33%, transparent 33%) no-repeat 100% 0 / 3px 100%,
+        /* Bottom-left horizontal */
+        linear-gradient(to right, white 33%, transparent 33%) no-repeat 0 100% / 100% 3px,
+        /* Bottom-left vertical */
+        linear-gradient(to top, white 33%, transparent 33%) no-repeat 0 100% / 3px 100%,
+        /* Bottom-right horizontal */
+        linear-gradient(to left, white 33%, transparent 33%) no-repeat 100% 100% / 100% 3px,
+        /* Bottom-right vertical */
+        linear-gradient(to top, white 33%, transparent 33%) no-repeat 100% 100% / 3px 100%;
+}
+
+/* Flashing animation for expiring safety squares */
+.grid-cell.safety-square.expiring::before {
+    animation: safety-flash 0.25s ease-in-out infinite;
+}
+
+@keyframes safety-flash {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
 }
 
 /* Spawn Warning */
@@ -951,6 +972,14 @@ body {
     0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
     20% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
     100% { opacity: 0; transform: translate(-50%, -70%) scale(1); }
+}
+
+/* =========================================
+   PAUSED STATE - Blur numbers to prevent route planning
+   ========================================= */
+.game-grid.paused .grid-cell .number {
+    filter: blur(8px);
+    opacity: 0.5;
 }
 
 /* =========================================

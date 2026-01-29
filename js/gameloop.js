@@ -149,9 +149,9 @@ const GameLoop = {
 
     // Adjust tick rate based on level (faster at higher levels)
     setTickRate(level) {
-        const baseRate = 1000;  // 1 second at level 1
-        const minRate = 400;   // Minimum 400ms (fastest)
-        const reduction = (level - 1) * 40;
+        const baseRate = 2500;  // 2.5 seconds at level 1
+        const minRate = 400;    // Minimum 400ms (fastest)
+        const reduction = (level - 1) * 100;  // Speed up 100ms per level
         this.tickRate = Math.max(minRate, baseRate - reduction);
 
         // Restart interval with new rate if already running

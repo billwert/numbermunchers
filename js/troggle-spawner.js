@@ -5,19 +5,38 @@
 
 const TroggleSpawner = {
     // Spawn timing
-    spawnCooldownMs: 1000,  // Minimum ms between spawns
+    spawnCooldownMs: 3000,  // Minimum ms between spawns
+    maxTimeWithoutTroggle: 5000,  // Force spawn if no troggles for this long
     lastSpawnTick: 0,
+    lastTroggleExistedTick: 0,  // Track when we last had a troggle
+    
+    // First troggle delay (decreases per level)
+    baseFirstSpawnDelay: 3000,  // 3 seconds at level 1
+    firstSpawnReductionPerLevel: 100,  // 100ms faster per level
+    minFirstSpawnDelay: 1000,  // Never faster than 1 second
 
     // Pending spawns (showing warning before entry)
     pendingSpawns: [],
 
     // Warning duration in ms
     warningDuration: 500,
+    
+    // Track if first spawn has happened this level
+    firstSpawnDone: false,
 
     // Initialize for a level
     init(level) {
         this.lastSpawnTick = 0;
+        this.lastTroggleExistedTick = 0;
         this.pendingSpawns = [];
+        this.firstSpawnDone = false;
+        this.currentLevel = level;
+    },
+    
+    // Get first spawn delay for current level
+    getFirstSpawnDelay(level) {
+        const delay = this.baseFirstSpawnDelay - (level - 1) * this.firstSpawnReductionPerLevel;
+        return Math.max(this.minFirstSpawnDelay, delay);
     },
 
     // Get maximum Troggles allowed for a level
@@ -46,21 +65,43 @@ const TroggleSpawner = {
 
     // Check if should spawn (called each tick by GameLoop)
     checkSpawn(currentTick, tickRateMs) {
-        // Check cooldown
-        const ticksSinceSpawn = currentTick - this.lastSpawnTick;
-        const msSinceSpawn = ticksSinceSpawn * tickRateMs;
-
-        if (msSinceSpawn < this.spawnCooldownMs) return;
-
-        // Check Troggle count
         if (typeof Troggle === 'undefined') return;
 
         const level = typeof Game !== 'undefined' ? Game.level : 1;
         const currentCount = Troggle.getCount();
         const maxCount = this.getMaxTroggles(level);
 
+        // Track when we last had a troggle
+        if (currentCount > 0) {
+            this.lastTroggleExistedTick = currentTick;
+            this.firstSpawnDone = true;
+        }
+
         // Don't spawn if at or above limit
         if (currentCount >= maxCount) return;
+
+        // Calculate elapsed time since level start (tick 0)
+        const elapsedMs = currentTick * tickRateMs;
+        
+        // First spawn has a special delay based on level
+        if (!this.firstSpawnDone) {
+            const firstSpawnDelay = this.getFirstSpawnDelay(level);
+            if (elapsedMs < firstSpawnDelay) return;
+        }
+
+        // Calculate time since last spawn
+        const ticksSinceSpawn = currentTick - this.lastSpawnTick;
+        const msSinceSpawn = ticksSinceSpawn * tickRateMs;
+
+        // Calculate time since we had any troggle
+        const ticksSinceTroggle = currentTick - this.lastTroggleExistedTick;
+        const msSinceTroggle = ticksSinceTroggle * tickRateMs;
+
+        // Force spawn if no troggles for too long (and we're below max)
+        const forceSpawn = this.firstSpawnDone && currentCount === 0 && msSinceTroggle >= this.maxTimeWithoutTroggle;
+
+        // Check cooldown (unless forced or first spawn)
+        if (!forceSpawn && this.firstSpawnDone && msSinceSpawn < this.spawnCooldownMs) return;
 
         // Spawn a new Troggle
         this.startSpawn(level);

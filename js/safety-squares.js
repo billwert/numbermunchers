@@ -4,11 +4,16 @@
    ========================================= */
 
 const SafetySquares = {
-    // Array of safety square positions
+    // Array of safety square objects with position and lifetime
     squares: [],
 
     // Maximum number of safety squares
     maxSquares: 3,
+
+    // Lifetime range in ms
+    minLifetime: 2000,
+    maxLifetime: 5000,
+    flashDuration: 500, // Flash in last 500ms
 
     // Initialize for a level
     init(level) {
@@ -27,7 +32,7 @@ const SafetySquares = {
         if (this.squares.length >= this.maxSquares) return false;
 
         // Build exclusion list: muncher, troggles, existing safety squares
-        const exclude = [...this.squares];
+        const exclude = this.squares.map(s => ({ x: s.x, y: s.y }));
 
         if (typeof Game !== 'undefined' && Game.muncher) {
             const mPos = Game.muncher.getPosition();
@@ -42,7 +47,14 @@ const SafetySquares = {
         if (typeof Grid !== 'undefined') {
             const pos = Grid.getRandomPosition(exclude);
             if (pos) {
-                this.squares.push(pos);
+                const lifetime = this.minLifetime + Math.random() * (this.maxLifetime - this.minLifetime);
+                const square = {
+                    x: pos.x,
+                    y: pos.y,
+                    lifetime: lifetime,
+                    createdAt: Date.now()
+                };
+                this.squares.push(square);
                 Grid.markSafetySquare(pos.x, pos.y, true);
                 return true;
             }
@@ -69,8 +81,31 @@ const SafetySquares = {
         return this.squares.some(s => s.x === x && s.y === y);
     },
 
-    // Update called each tick - may spawn/remove safety squares
+    // Update called each tick - check lifetimes and spawn new ones
     update() {
+        const now = Date.now();
+        const toRemove = [];
+
+        // Check each square's lifetime
+        this.squares.forEach(sq => {
+            const elapsed = now - sq.createdAt;
+            const remaining = sq.lifetime - elapsed;
+
+            if (remaining <= 0) {
+                // Expired - mark for removal
+                toRemove.push(sq);
+            } else if (remaining <= this.flashDuration) {
+                // Flash warning - about to expire
+                Grid.markSafetySquareExpiring(sq.x, sq.y, true);
+            }
+        });
+
+        // Remove expired squares
+        toRemove.forEach(sq => {
+            Grid.markSafetySquareExpiring(sq.x, sq.y, false);
+            this.removeSafetySquare(sq.x, sq.y);
+        });
+
         // If no safety squares, high chance to spawn one
         if (this.squares.length === 0) {
             if (Math.random() < 0.3) { // 30% chance per tick
@@ -85,13 +120,6 @@ const SafetySquares = {
                 this.addSafetySquare();
             }
         }
-
-        // Small chance for a safety square to disappear
-        if (this.squares.length > 0 && Math.random() < 0.02) {
-            const idx = Math.floor(Math.random() * this.squares.length);
-            const sq = this.squares[idx];
-            this.removeSafetySquare(sq.x, sq.y);
-        }
     },
 
     // Clear all safety squares
@@ -99,6 +127,7 @@ const SafetySquares = {
         this.squares.forEach(sq => {
             if (typeof Grid !== 'undefined') {
                 Grid.markSafetySquare(sq.x, sq.y, false);
+                Grid.markSafetySquareExpiring(sq.x, sq.y, false);
             }
         });
         this.squares = [];
@@ -106,7 +135,7 @@ const SafetySquares = {
 
     // Get all safety square positions
     getPositions() {
-        return [...this.squares];
+        return this.squares.map(s => ({ x: s.x, y: s.y }));
     },
 
     // Get count

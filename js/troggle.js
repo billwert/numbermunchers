@@ -238,7 +238,7 @@ const Troggle = {
        MOVEMENT STRATEGIES BY TYPE
        ========================================= */
 
-    // Reggie: Linear movement, bounce off edges, small random direction change
+    // Reggie: Linear movement, despawns at edges
     planReggieMove(troggle) {
         let { x, y, direction } = troggle;
         let newX = x;
@@ -272,25 +272,8 @@ const Troggle = {
             }
             return { x: newX, y: newY, direction: newDirection };
         } else {
-            // At edge - either bounce or walk off
-
-            // 20% chance to walk off the board (despawn)
-            if (Math.random() < 0.2) {
-                return { x: newX, y: newY, direction, offBoard: true };
-            }
-
-            // Bounce - reverse direction
-            newDirection = this.reverseDirection(direction);
-            const bounceDelta = this.getDirectionDelta(newDirection);
-            newX = x + bounceDelta.dx;
-            newY = y + bounceDelta.dy;
-
-            if (Grid.isValidPosition(newX, newY)) {
-                return { x: newX, y: newY, direction: newDirection };
-            }
-
-            // Corner case - stay in place
-            return { x, y, direction: newDirection };
+            // At edge - always walk off the board (despawn)
+            return { x: newX, y: newY, direction, offBoard: true };
         }
     },
 

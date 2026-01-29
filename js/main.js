@@ -36,15 +36,38 @@ const Main = {
     setupResumeOverlay() {
         const resumeOverlay = document.getElementById('resume-overlay');
 
-        // Handle visibility change (app going to background and returning)
-        document.addEventListener('visibilitychange', () => {
-            if (document.visibilityState === 'visible') {
-                // Check if we should show the resume overlay
-                // Show it if we're on the game screen and not already paused/gameover
-                if (this.currentScreen === 'game' &&
-                    typeof Game !== 'undefined' &&
-                    (Game.state === 'playing' || Game.state === 'paused' || Game.state === 'levelcomplete')) {
+        // Handle window focus/blur (more reliable than visibilitychange for desktop)
+        window.addEventListener('blur', () => {
+            // Browser lost focus - pause sound and game loop
+            if (this.currentScreen === 'game' &&
+                typeof Game !== 'undefined' &&
+                Game.state === 'playing') {
+                // Pause game loop
+                if (typeof GameLoop !== 'undefined') {
+                    GameLoop.pause();
+                }
+                // Suspend audio context to stop sound
+                if (typeof Sound !== 'undefined' && Sound.audioContext) {
+                    Sound.audioContext.suspend();
+                }
+                // Blur numbers to prevent route planning
+                document.getElementById('game-grid').classList.add('paused');
+            }
+        });
+
+        window.addEventListener('focus', () => {
+            // Check if we should show the resume overlay (mobile only)
+            // On desktop, just auto-resume
+            if (this.currentScreen === 'game' &&
+                typeof Game !== 'undefined' &&
+                (Game.state === 'playing' || Game.state === 'paused' || Game.state === 'levelcomplete')) {
+                
+                if (this.isTouchDevice()) {
+                    // Mobile: show tap to continue overlay
                     this.showResumeOverlay();
+                } else {
+                    // Desktop: auto-resume sound and game loop
+                    this.autoResumeGame();
                 }
             }
         });
@@ -59,6 +82,30 @@ const Main = {
             e.preventDefault();
             this.hideResumeOverlay();
         });
+    },
+
+    // Detect touch device (same logic as Grid)
+    isTouchDevice() {
+        return ('ontouchstart' in window) || 
+               (navigator.maxTouchPoints > 0) || 
+               (window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+    },
+
+    // Auto-resume game without overlay (desktop)
+    autoResumeGame() {
+        // Resume audio
+        Sound.init();
+        Sound.resume();
+
+        // Unblur numbers
+        document.getElementById('game-grid').classList.remove('paused');
+
+        // Resume game loop if it was playing
+        if (typeof Game !== 'undefined' && Game.state === 'playing') {
+            if (typeof GameLoop !== 'undefined') {
+                GameLoop.resume();
+            }
+        }
     },
 
     // Show the resume overlay
@@ -81,6 +128,13 @@ const Main = {
         // Resume audio (this tap provides the required user gesture)
         Sound.init();
         Sound.resume();
+
+        // Resume game loop if it was playing
+        if (typeof GameLoop !== 'undefined' && typeof Game !== 'undefined') {
+            if (Game.state === 'playing') {
+                GameLoop.resume();
+            }
+        }
 
         // Resume game if it was paused by the overlay
         if (typeof Game !== 'undefined' && Game.state === 'paused') {

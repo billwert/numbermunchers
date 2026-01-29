@@ -421,6 +421,19 @@ const Grid = {
                 cell.classList.add('safety-square');
             } else {
                 cell.classList.remove('safety-square');
+                cell.classList.remove('expiring');
+            }
+        }
+    },
+
+    // Mark/unmark a safety square as expiring (flashing)
+    markSafetySquareExpiring(x, y, expiring) {
+        const cell = this.getCellElement(x, y);
+        if (cell) {
+            if (expiring) {
+                cell.classList.add('expiring');
+            } else {
+                cell.classList.remove('expiring');
             }
         }
     },
@@ -445,6 +458,7 @@ const Grid = {
     clearSpecialCells() {
         this.element.querySelectorAll('.safety-square').forEach(cell => {
             cell.classList.remove('safety-square');
+            cell.classList.remove('expiring');
         });
         this.element.querySelectorAll('.spawn-warning').forEach(cell => {
             cell.classList.remove('spawn-warning');
