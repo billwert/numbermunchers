@@ -1,12 +1,12 @@
 /* =========================================
-   MUNCHER - Player Character
+   NOSHER - Player Character
    ========================================= */
 
-const Muncher = {
+const Nosher = {
     x: 0,
     y: 0,
 
-    // Initialize muncher at position
+    // Initialize nosher at position
     init(startX = 0, startY = 0) {
         this.x = startX;
         this.y = startY;
@@ -36,7 +36,7 @@ const Muncher = {
         const moved = (prevX !== this.x || prevY !== this.y);
 
         if (moved) {
-            Grid.updateMuncherPosition(this.x, this.y, prevX, prevY);
+            Grid.updateNosherPosition(this.x, this.y, prevX, prevY);
         }
 
         return moved;
@@ -53,11 +53,11 @@ const Muncher = {
         const prevY = this.y;
         this.x = x;
         this.y = y;
-        Grid.updateMuncherPosition(this.x, this.y, prevX, prevY);
+        Grid.updateNosherPosition(this.x, this.y, prevX, prevY);
     },
 
-    // Attempt to munch the current cell
-    munch() {
-        return Grid.munchCell(this.x, this.y);
+    // Attempt to nosh the current cell
+    nosh() {
+        return Grid.noshCell(this.x, this.y);
     }
 };

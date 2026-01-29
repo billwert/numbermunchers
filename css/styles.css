@@ -1,5 +1,5 @@
 /* =========================================
-   NUMBER MUNCHERS - Kid-Friendly Styles
+   NUMBER NOSHERS - Kid-Friendly Styles
    ========================================= */
 
 /* CSS Custom Properties */
@@ -32,8 +32,8 @@
     --color-cell-hover: #3d3d7a;
 
     /* Character colors */
-    --color-muncher: #4CAF50;
-    --color-muncher-dark: #2E7D32;
+    --color-nosher: #4CAF50;
+    --color-nosher-dark: #2E7D32;
     --color-troggle: #FF5722;
 
     /* Sizing - JS will override these for game screen */
@@ -136,16 +136,16 @@ body {
     100% { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-/* Muncher Mascot on Splash */
-.muncher-mascot {
+/* Nosher Mascot on Splash */
+.nosher-mascot {
     margin: 30px auto;
     animation: float 2s ease-in-out infinite;
 }
 
-.muncher-face {
+.nosher-face {
     width: 120px;
     height: 120px;
-    background: var(--color-muncher);
+    background: var(--color-nosher);
     border-radius: 50%;
     position: relative;
     margin: 0 auto;
@@ -153,7 +153,7 @@ body {
                 inset 0 -10px 20px rgba(0, 0, 0, 0.2);
 }
 
-.muncher-face .eye {
+.nosher-face .eye {
     position: absolute;
     width: 25px;
     height: 30px;
@@ -162,10 +162,10 @@ body {
     top: 25px;
 }
 
-.muncher-face .eye.left { left: 25px; }
-.muncher-face .eye.right { right: 25px; }
+.nosher-face .eye.left { left: 25px; }
+.nosher-face .eye.right { right: 25px; }
 
-.muncher-face .eye::after {
+.nosher-face .eye::after {
     content: '';
     position: absolute;
     width: 12px;
@@ -178,7 +178,7 @@ body {
     animation: look-around 3s ease-in-out infinite;
 }
 
-.muncher-face .mouth {
+.nosher-face .mouth {
     position: absolute;
     width: 50px;
     height: 25px;
@@ -724,21 +724,21 @@ body {
     75% { transform: translate(-50%, -50%) rotate(3deg); }
 }
 
-.grid-cell.munched {
+.grid-cell.noshed {
     background: transparent;
     border-color: var(--color-cell-border);
     border-style: dashed;
     opacity: 0.4;
 }
 
-.grid-cell.munched .number {
+.grid-cell.noshed .number {
     display: none;
 }
 
 /* =========================================
-   MUNCHER SPRITE (Animated Character)
+   NOSHER SPRITE (Animated Character)
    ========================================= */
-.muncher-sprite {
+.nosher-sprite {
     position: absolute;
     top: 0;
     left: 0;
@@ -752,29 +752,29 @@ body {
     transform: translate(0, 0);
 }
 
-.muncher-body {
+.nosher-body {
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
     width: 80%;
     height: 80%;
-    background: var(--color-muncher);
+    background: var(--color-nosher);
     border-radius: 50%;
     box-shadow:
         0 0 20px rgba(76, 175, 80, 0.6),
         inset -5px -5px 15px rgba(0, 0, 0, 0.2),
         inset 5px 5px 15px rgba(255, 255, 255, 0.1);
-    border: 3px solid var(--color-muncher-dark);
+    border: 3px solid var(--color-nosher-dark);
     transition: opacity 0.15s ease;
 }
 
-/* Slight transparency when muncher is over an unmunched number */
-.muncher-sprite.over-number .muncher-body {
+/* Slight transparency when nosher is over an unnoshed number */
+.nosher-sprite.over-number .nosher-body {
     opacity: 0.85;
 }
 
-.muncher-eye {
+.nosher-eye {
     position: absolute;
     width: 22%;
     height: 28%;
@@ -783,10 +783,10 @@ body {
     top: 22%;
 }
 
-.muncher-eye.left { left: 18%; }
-.muncher-eye.right { right: 18%; }
+.nosher-eye.left { left: 18%; }
+.nosher-eye.right { right: 18%; }
 
-.muncher-eye::after {
+.nosher-eye::after {
     content: '';
     position: absolute;
     width: 50%;
@@ -796,16 +796,16 @@ body {
     bottom: 15%;
     left: 50%;
     transform: translateX(-50%);
-    animation: muncher-look 3s ease-in-out infinite;
+    animation: nosher-look 3s ease-in-out infinite;
 }
 
-@keyframes muncher-look {
+@keyframes nosher-look {
     0%, 100% { transform: translateX(-50%); }
     25% { transform: translateX(-80%); }
     75% { transform: translateX(-20%); }
 }
 
-.muncher-mouth {
+.nosher-mouth {
     position: absolute;
     width: 40%;
     height: 8%;
@@ -817,24 +817,24 @@ body {
     transition: height 0.1s ease-out;
 }
 
-/* Muncher eating animation - mouth opens */
-.muncher-sprite.eating .muncher-mouth {
+/* Nosher eating animation - mouth opens */
+.nosher-sprite.eating .nosher-mouth {
     height: 25%;
-    animation: muncher-eat 0.3s ease-in-out;
+    animation: nosher-eat 0.3s ease-in-out;
 }
 
-@keyframes muncher-eat {
+@keyframes nosher-eat {
     0% { height: 8%; }
     40% { height: 25%; }
     100% { height: 8%; }
 }
 
-/* Muncher happy bounce on correct munch */
-.muncher-sprite.happy {
-    animation: muncher-bounce 0.4s ease-out;
+/* Nosher happy bounce on correct nosh */
+.nosher-sprite.happy {
+    animation: nosher-bounce 0.4s ease-out;
 }
 
-@keyframes muncher-bounce {
+@keyframes nosher-bounce {
     0%, 100% { transform: var(--current-transform); }
     25% { transform: var(--current-transform) scale(1.15) translateY(-8px); }
     50% { transform: var(--current-transform) scale(0.95); }
@@ -867,10 +867,10 @@ body {
     }
 }
 
-/* Muncher cell highlight (shows which cell muncher is in) */
-.grid-cell.muncher-cell {
+/* Nosher cell highlight (shows which cell nosher is in) */
+.grid-cell.nosher-cell {
     background: rgba(76, 175, 80, 0.2);
-    border-color: var(--color-muncher);
+    border-color: var(--color-nosher);
     z-index: 25;
 }
 
@@ -1298,7 +1298,7 @@ body {
 /* =========================================
    ANIMATIONS FOR CORRECT/INCORRECT
    ========================================= */
-.grid-cell.correct-munch {
+.grid-cell.correct-nosh {
     animation: correct-pop 0.3s ease-out;
 }
 
@@ -1308,7 +1308,7 @@ body {
     100% { transform: scale(1); }
 }
 
-.grid-cell.incorrect-munch {
+.grid-cell.incorrect-nosh {
     animation: incorrect-shake 0.3s ease-out;
 }
 
@@ -1331,8 +1331,8 @@ body {
     80% { transform: translateX(3px); }
 }
 
-/* Muncher bounce on correct answer */
-.muncher-happy {
+/* Nosher bounce on correct answer */
+.nosher-happy {
     animation: happy-bounce 0.4s ease-out;
 }
 

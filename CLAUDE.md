@@ -1,11 +1,11 @@
-# Number Munchers - Project Documentation for Claude
+# Number Noshers - Project Documentation for Claude
 
 ## Workflow
 
 - **Always commit and push** after finishing a turn so the user can test via GitHub Pages
 
 ## Project Overview
-A kid-friendly educational math game inspired by the classic "Number Munchers" from MECC. Players navigate a grid, "munching" (eating) numbers that match mathematical rules while avoiding enemies called Troggles.
+A kid-friendly educational math game inspired by the classic "Number Noshers" from MECC. Players navigate a grid, "noshing" (eating) numbers that match mathematical rules while avoiding enemies called Troggles.
 
 ## How to Test
 **This is a static SPA (Single Page Application)** - no build step or web server needed!
@@ -16,7 +16,7 @@ A kid-friendly educational math game inspired by the classic "Number Munchers" f
 ## Project Structure
 
 ```
-numbermunchers/
+numbernoshers/
 ├── index.html          # Main HTML with all screens/UI
 ├── css/
 │   └── styles.css      # All styles (responsive, animations, etc.)
@@ -25,7 +25,7 @@ numbermunchers/
 │   ├── game.js         # Core game loop, state, scoring
 │   ├── input.js        # Unified input (keyboard, mouse, touch, gamepad)
 │   ├── grid.js         # 6x5 grid management, rendering
-│   ├── muncher.js      # Player character logic
+│   ├── nosher.js      # Player character logic
 │   ├── troggle.js      # Enemy AI and movement
 │   ├── pathfinding.js  # A* pathfinding for autopilot
 │   ├── levels.js       # Level progression, rules, difficulty
@@ -57,19 +57,19 @@ numbermunchers/
 
 ### Grid System (`grid.js`)
 - 6 columns × 5 rows
-- Each cell: `{value, isCorrect, munched, x, y}`
-- Muncher sprite positioned absolutely with CSS transforms
+- Each cell: `{value, isCorrect, noshed, x, y}`
+- Nosher sprite positioned absolutely with CSS transforms
 - Cell clicks support both direct movement and autopilot pathfinding
 
-### Muncher (`muncher.js`)
+### Nosher (`nosher.js`)
 - Player character
 - Simple x/y position tracking
 - Movement validation (grid boundaries)
-- CSS sprite positioned by `Grid.updateMuncherPosition()`
+- CSS sprite positioned by `Grid.updateNosherPosition()`
 
 ### Troggles (`troggle.js`)
 - Enemies that chase the player
-- Use A* pathfinding to navigate around munched cells
+- Use A* pathfinding to navigate around noshed cells
 - Speed increases with level
 - Movement handled by `setInterval` with configurable speed
 
@@ -82,7 +82,7 @@ numbermunchers/
 ## Recent Bug Fixes (2026-01-28)
 
 1. ✅ **Splash screen mouse click** - Now accepts clicks in addition to keyboard/touch
-2. ✅ **Muncher centering** - Fixed CSS to properly center muncher in cell (was offset left/up)
+2. ✅ **Nosher centering** - Fixed CSS to properly center nosher in cell (was offset left/up)
 3. ✅ **Settings button text** - Changed from "Save & Back" to just "Back" (settings auto-save)
 4. ✅ **Settings ESC key** - ESC now closes settings, returns to pause menu or main menu
 5. ✅ **Game over button alignment** - Buttons now centered (added flexbox to container)
@@ -118,13 +118,13 @@ Main.showScreen('screenName')
    - `Game.state = 'paused'` (internal state)
    - `#pause-overlay.active` (UI visibility)
    - Must manage both when transitioning to/from settings
-3. **Muncher Positioning**: Uses CSS transforms, not DOM position, for smooth animation
+3. **Nosher Positioning**: Uses CSS transforms, not DOM position, for smooth animation
 4. **Settings**: Auto-save on change, no explicit "save" action needed
 5. **Testing**: Just open `index.html` in browser - no server needed!
 
 ## Sound System
 - Background music loops during gameplay/menu
-- SFX for: move, munch (correct/wrong), troggle hit, extra life, level complete
+- SFX for: move, nosh (correct/wrong), troggle hit, extra life, level complete
 - Web Audio API with volume controls
 - Requires user interaction to start (browser autoplay policy)
 
@@ -143,7 +143,7 @@ Main.showScreen('screenName')
 
 ## Testing Checklist
 - [ ] Splash screen: click, tap, or key press to start
-- [ ] Muncher: properly centered in cell
+- [ ] Nosher: properly centered in cell
 - [ ] Settings: "Back" button text, ESC key works
 - [ ] Game over: buttons centered
 - [ ] Pause → Settings → ESC: returns to pause menu with working ESC key

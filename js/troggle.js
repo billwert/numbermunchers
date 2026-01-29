@@ -6,10 +6,10 @@
 // Troggle type constants
 const TroggleType = {
     REGGIE: 'reggie',     // Linear movement, bounce off edges
-    BASHFUL: 'bashful',   // Random movement, flees when Muncher approaches
+    BASHFUL: 'bashful',   // Random movement, flees when Nosher approaches
     HELPER: 'helper',     // Eats answers (removes from board)
     WORKER: 'worker',     // Adds/modifies answers
-    SMARTIE: 'smartie'    // A* pathfinding pursuit of Muncher
+    SMARTIE: 'smartie'    // A* pathfinding pursuit of Nosher
 };
 
 // Emoji for each type
@@ -46,7 +46,7 @@ const Troggle = {
         this.nextId = 0;
 
         for (let i = 0; i < count; i++) {
-            // Get position away from excluded positions (muncher)
+            // Get position away from excluded positions (nosher)
             const pos = Grid.getRandomPosition([
                 ...excludePositions,
                 ...this.troggles.map(t => ({ x: t.x, y: t.y }))
@@ -120,7 +120,7 @@ const Troggle = {
 
         Grid.updateTroggles(this.troggles);
 
-        // Check for collision with muncher
+        // Check for collision with nosher
         if (typeof Game !== 'undefined') {
             Game.checkTroggleCollision();
         }
@@ -184,7 +184,7 @@ const Troggle = {
                 troggle.direction = move.newDirection;
             }
 
-            // Worker special action: may restore a munched cell
+            // Worker special action: may restore a noshed cell
             if (troggle.type === TroggleType.WORKER && Math.random() < 0.15) {
                 this.workerAction(troggle);
             }
@@ -277,17 +277,17 @@ const Troggle = {
         }
     },
 
-    // Bashful: Random movement, flees when Muncher approaches
+    // Bashful: Random movement, flees when Nosher approaches
     planBashfulMove(troggle) {
         const { x, y } = troggle;
 
-        // Check if Muncher is nearby (within 2 cells)
-        if (typeof Game !== 'undefined' && Game.muncher) {
-            const mPos = Game.muncher.getPosition();
+        // Check if Nosher is nearby (within 2 cells)
+        if (typeof Game !== 'undefined' && Game.nosher) {
+            const mPos = Game.nosher.getPosition();
             const dist = Math.abs(x - mPos.x) + Math.abs(y - mPos.y);
 
             if (dist <= 2) {
-                // Flee! Move away from Muncher
+                // Flee! Move away from Nosher
                 return this.planFleeMove(troggle, mPos);
             }
         }
@@ -300,7 +300,7 @@ const Troggle = {
     planHelperMove(troggle) {
         const { x, y } = troggle;
 
-        // Find nearest unmunched correct answer
+        // Find nearest unnoshed correct answer
         if (typeof Grid !== 'undefined') {
             const target = this.findNearestCorrectCell(x, y);
             if (target) {
@@ -312,25 +312,25 @@ const Troggle = {
         return this.planRandomMove(troggle);
     },
 
-    // Worker: Random movement, but can restore munched cells
+    // Worker: Random movement, but can restore noshed cells
     planWorkerMove(troggle) {
         // Workers move randomly
         return this.planRandomMove(troggle);
     },
 
-    // Smartie: A* pathfinding pursuit of Muncher
+    // Smartie: A* pathfinding pursuit of Nosher
     planSmartieMove(troggle) {
         const { x, y } = troggle;
 
-        // Use pathfinding to chase Muncher
-        if (typeof Game !== 'undefined' && Game.muncher && typeof Pathfinding !== 'undefined') {
-            const mPos = Game.muncher.getPosition();
+        // Use pathfinding to chase Nosher
+        if (typeof Game !== 'undefined' && Game.nosher && typeof Pathfinding !== 'undefined') {
+            const mPos = Game.nosher.getPosition();
 
-            // Find path to Muncher (don't avoid other Troggles)
+            // Find path to Nosher (don't avoid other Troggles)
             const path = Pathfinding.findPath(x, y, mPos.x, mPos.y, []);
 
             if (path && path.length > 0) {
-                // Move one step toward Muncher
+                // Move one step toward Nosher
                 const nextStep = path[0];
                 const newDirection = nextStep.direction || troggle.direction;
 
@@ -430,7 +430,7 @@ const Troggle = {
         return this.planRandomMove(troggle);
     },
 
-    // Find nearest unmunched correct cell
+    // Find nearest unnoshed correct cell
     findNearestCorrectCell(fromX, fromY) {
         if (typeof Grid === 'undefined') return null;
 
@@ -438,7 +438,7 @@ const Troggle = {
         let nearestDist = Infinity;
 
         Grid.cells.forEach(cell => {
-            if (cell.isCorrect && !cell.munched) {
+            if (cell.isCorrect && !cell.noshed) {
                 const dist = Math.abs(cell.x - fromX) + Math.abs(cell.y - fromY);
                 if (dist < nearestDist) {
                     nearestDist = dist;
@@ -483,19 +483,19 @@ const Troggle = {
         if (typeof Grid === 'undefined') return;
 
         const cell = Grid.getCell(troggle.x, troggle.y);
-        if (cell && !cell.munched) {
-            // "Eat" the cell (mark as munched but don't give player points)
-            cell.munched = true;
+        if (cell && !cell.noshed) {
+            // "Eat" the cell (mark as noshed but don't give player points)
+            cell.noshed = true;
             Grid.render();
         }
     },
 
-    // Worker may restore a munched cell
+    // Worker may restore a noshed cell
     workerAction(troggle) {
         if (typeof Grid === 'undefined' || typeof Levels === 'undefined') return;
 
         const cell = Grid.getCell(troggle.x, troggle.y);
-        if (cell && cell.munched) {
+        if (cell && cell.noshed) {
             // Restore the cell with a new number
             const level = typeof Game !== 'undefined' ? Game.level : 1;
             const multiple = Levels.getMultiple(level);
@@ -514,7 +514,7 @@ const Troggle = {
 
             cell.value = value;
             cell.isCorrect = isCorrect;
-            cell.munched = false;
+            cell.noshed = false;
             Grid.render();
         }
     },

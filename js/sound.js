@@ -19,7 +19,7 @@ const Sound = {
     musicShouldBePlaying: false,
 
     // Storage key
-    STORAGE_KEY: 'numberMunchersSoundSettings',
+    STORAGE_KEY: 'numberNoshersSoundSettings',
 
     // Initialize audio context (must be called after user interaction)
     init() {
@@ -147,8 +147,8 @@ const Sound = {
         this.playTone(440, 0.05, 'sine', 0.3);
     },
 
-    // Correct munch - chomping sound
-    playMunchCorrect() {
+    // Correct nosh - chomping sound
+    playNoshCorrect() {
         if (!this.audioContext || this.sfxVolume === 0) return;
 
         // Ensure context is running (iOS may suspend it)
@@ -195,8 +195,8 @@ const Sound = {
         osc2.stop(now + 0.2);
     },
 
-    // Incorrect munch - buzzer
-    playMunchWrong() {
+    // Incorrect nosh - buzzer
+    playNoshWrong() {
         if (!this.audioContext || this.sfxVolume === 0) return;
 
         // Low buzz

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Number Munchers</title>
+    <title>Number Noshers</title>
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
@@ -18,17 +18,16 @@
                 <span class="letter" style="--delay: 4">E</span>
                 <span class="letter" style="--delay: 5">R</span>
                 <span class="space"></span>
-                <span class="letter" style="--delay: 6">M</span>
-                <span class="letter" style="--delay: 7">U</span>
-                <span class="letter" style="--delay: 8">N</span>
-                <span class="letter" style="--delay: 9">C</span>
-                <span class="letter" style="--delay: 10">H</span>
-                <span class="letter" style="--delay: 11">E</span>
-                <span class="letter" style="--delay: 12">R</span>
-                <span class="letter" style="--delay: 13">S</span>
+                <span class="letter" style="--delay: 6">N</span>
+                <span class="letter" style="--delay: 7">O</span>
+                <span class="letter" style="--delay: 8">S</span>
+                <span class="letter" style="--delay: 9">H</span>
+                <span class="letter" style="--delay: 10">E</span>
+                <span class="letter" style="--delay: 11">R</span>
+                <span class="letter" style="--delay: 12">S</span>
             </h1>
-            <div class="muncher-mascot">
-                <div class="muncher-face">
+            <div class="nosher-mascot">
+                <div class="nosher-face">
                     <div class="eye left"></div>
                     <div class="eye right"></div>
                     <div class="mouth"></div>
@@ -41,7 +40,7 @@
     <!-- Main Menu -->
     <div id="menu-screen" class="screen">
         <div class="menu-content">
-            <h1 class="menu-title">Number Munchers</h1>
+            <h1 class="menu-title">Number Noshers</h1>
             <nav class="menu-options">
                 <button class="menu-btn selected" data-action="new-game">
                     <span class="btn-icon">🎮</span> New Game
@@ -81,7 +80,7 @@
             <div class="instructions">
                 <div class="instruction-item">
                     <div class="instruction-icon">🎯</div>
-                    <p>Munch the numbers that match the rule at the top!</p>
+                    <p>Nosh the numbers that match the rule at the top!</p>
                 </div>
                 <div class="instruction-item">
                     <div class="instruction-icon">⬆️⬇️⬅️➡️</div>
@@ -89,7 +88,7 @@
                 </div>
                 <div class="instruction-item">
                     <div class="instruction-icon">⎵</div>
-                    <p>Press Space or tap your cell to munch</p>
+                    <p>Press Space or tap your cell to nosh</p>
                 </div>
                 <div class="instruction-item">
                     <div class="instruction-icon">👾</div>
@@ -184,12 +183,12 @@
                 <div id="game-grid" class="game-grid">
                     <!-- 6x5 grid cells populated by JS -->
                 </div>
-                <!-- Muncher Sprite (animated separately for smooth movement) -->
-                <div id="muncher-sprite" class="muncher-sprite">
-                    <div class="muncher-body">
-                        <div class="muncher-eye left"></div>
-                        <div class="muncher-eye right"></div>
-                        <div class="muncher-mouth"></div>
+                <!-- Nosher Sprite (animated separately for smooth movement) -->
+                <div id="nosher-sprite" class="nosher-sprite">
+                    <div class="nosher-body">
+                        <div class="nosher-eye left"></div>
+                        <div class="nosher-eye right"></div>
+                        <div class="nosher-mouth"></div>
                     </div>
                 </div>
             </div>
@@ -255,7 +254,7 @@
     <script src="js/input.js"></script>
     <script src="js/levels.js"></script>
     <script src="js/grid.js"></script>
-    <script src="js/muncher.js"></script>
+    <script src="js/nosher.js"></script>
     <script src="js/safety-squares.js"></script>
     <script src="js/troggle.js"></script>
     <script src="js/troggle-spawner.js"></script>

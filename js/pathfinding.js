@@ -78,7 +78,7 @@ const Pathfinding = {
         return null;
     },
 
-    // Execute a path with the muncher
+    // Execute a path with the nosher
     async executePath(path, onComplete) {
         if (!path || path.length === 0) {
             if (onComplete) onComplete(true);
@@ -105,9 +105,9 @@ const Pathfinding = {
                 return;
             }
 
-            // Move muncher
+            // Move nosher
             if (typeof Game !== 'undefined' && Game.state === 'playing') {
-                const moved = Game.muncher.move(step.direction);
+                const moved = Game.nosher.move(step.direction);
                 if (moved) {
                     Sound.playMove();
                 }
@@ -153,13 +153,13 @@ const Pathfinding = {
         // Cancel any existing path
         this.cancelPath();
 
-        const muncherPos = Game.muncher.getPosition();
+        const nosherPos = Game.nosher.getPosition();
 
         // Get current Troggle positions as obstacles
         const obstacles = Troggle.getPositions();
 
         // Find path
-        const path = this.findPath(muncherPos.x, muncherPos.y, targetX, targetY, obstacles);
+        const path = this.findPath(nosherPos.x, nosherPos.y, targetX, targetY, obstacles);
 
         if (path && path.length > 0) {
             // Execute path
@@ -187,7 +187,7 @@ const Pathfinding = {
         const destination = this.currentPath[this.currentPath.length - 1];
         if (!destination) return;
 
-        const muncherPos = Game.muncher.getPosition();
+        const nosherPos = Game.nosher.getPosition();
 
         // Get updated Troggle positions as obstacles
         const obstacles = Troggle.getPositions();
@@ -199,7 +199,7 @@ const Pathfinding = {
 
             if (isBlocked) {
                 // Try to find a new path
-                const newPath = this.findPath(muncherPos.x, muncherPos.y, destination.x, destination.y, obstacles);
+                const newPath = this.findPath(nosherPos.x, nosherPos.y, destination.x, destination.y, obstacles);
 
                 if (newPath && newPath.length > 0) {
                     // Update the current path

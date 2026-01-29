@@ -6,12 +6,12 @@ const Grid = {
     COLS: 6,
     ROWS: 5,
 
-    // Grid state: array of {value, isCorrect, munched}
+    // Grid state: array of {value, isCorrect, noshed}
     cells: [],
 
     // DOM elements
     element: null,
-    muncherSprite: null,
+    nosherSprite: null,
 
     // Cell dimensions (calculated from CSS)
     cellSize: 60,
@@ -27,7 +27,7 @@ const Grid = {
 
     init() {
         this.element = document.getElementById('game-grid');
-        this.muncherSprite = document.getElementById('muncher-sprite');
+        this.nosherSprite = document.getElementById('nosher-sprite');
         this.createCells();
         this.calculateDimensions();
         this.setupResizeHandler();
@@ -80,10 +80,10 @@ const Grid = {
         this.cellSize = cellSize;
         this.gridGap = gap;
         
-        // Update muncher position if game is active
-        if (typeof Game !== 'undefined' && Game.muncher) {
-            const pos = Game.muncher.getPosition();
-            this.updateMuncherPosition(pos.x, pos.y);
+        // Update nosher position if game is active
+        if (typeof Game !== 'undefined' && Game.nosher) {
+            const pos = Game.nosher.getPosition();
+            this.updateNosherPosition(pos.x, pos.y);
         }
     },
 
@@ -134,8 +134,8 @@ const Grid = {
                         const cellX = parseInt(cell.dataset.x);
                         const cellY = parseInt(cell.dataset.y);
 
-                        // If clicking on muncher's current cell, munch
-                        if (cellX === Game.muncher.x && cellY === Game.muncher.y) {
+                        // If clicking on nosher's current cell, nosh
+                        if (cellX === Game.nosher.x && cellY === Game.nosher.y) {
                             if (Input.onAction) Input.onAction();
                         }
                         // On touch devices or with autopilot enabled, path to any cell
@@ -146,7 +146,7 @@ const Grid = {
                         }
                         // Otherwise normal click: move to adjacent only
                         else {
-                            Input.handleGridClick(cellX, cellY, Game.muncher.x, Game.muncher.y);
+                            Input.handleGridClick(cellX, cellY, Game.nosher.x, Game.nosher.y);
                         }
                     }
                 });
@@ -161,7 +161,7 @@ const Grid = {
         const numbers = Levels.generateGridNumbers(level, this.COLS * this.ROWS);
         this.cells = numbers.map((n, i) => ({
             ...n,
-            munched: false,
+            noshed: false,
             x: i % this.COLS,
             y: Math.floor(i / this.COLS)
         }));
@@ -180,8 +180,8 @@ const Grid = {
             // Reset classes
             cell.className = 'grid-cell';
 
-            if (data.munched) {
-                cell.classList.add('munched');
+            if (data.noshed) {
+                cell.classList.add('noshed');
                 numberSpan.textContent = '';
             } else {
                 numberSpan.textContent = data.value;
@@ -202,14 +202,14 @@ const Grid = {
         return this.element.querySelector(`[data-x="${x}"][data-y="${y}"]`);
     },
 
-    // Munch a cell - returns {success, isCorrect, value}
-    munchCell(x, y) {
+    // Nosh a cell - returns {success, isCorrect, value}
+    noshCell(x, y) {
         const cell = this.getCell(x, y);
-        if (!cell || cell.munched) {
+        if (!cell || cell.noshed) {
             return { success: false, isCorrect: false, value: null };
         }
 
-        // Animate the number flying to muncher's mouth
+        // Animate the number flying to nosher's mouth
         const cellElement = this.getCellElement(x, y);
         if (cellElement) {
             const numberSpan = cellElement.querySelector('.number');
@@ -218,16 +218,16 @@ const Grid = {
             }
         }
 
-        cell.munched = true;
+        cell.noshed = true;
 
         // Animate the cell
         if (cellElement) {
-            cellElement.classList.add(cell.isCorrect ? 'correct-munch' : 'incorrect-munch');
-            cellElement.classList.add('munched');
+            cellElement.classList.add(cell.isCorrect ? 'correct-nosh' : 'incorrect-nosh');
+            cellElement.classList.add('noshed');
 
             // Remove animation class after it completes
             setTimeout(() => {
-                cellElement.classList.remove('correct-munch', 'incorrect-munch');
+                cellElement.classList.remove('correct-nosh', 'incorrect-nosh');
             }, 300);
         }
 
@@ -238,7 +238,7 @@ const Grid = {
         };
     },
 
-    // Animate number flying into muncher's mouth
+    // Animate number flying into nosher's mouth
     animateNumberToMouth(cellElement, value) {
         // Create flying number element
         const flyingNumber = document.createElement('div');
@@ -257,12 +257,12 @@ const Grid = {
         flyingNumber.style.top = startY + 'px';
         flyingNumber.style.transform = 'translate(-50%, -50%)';
         
-        // Calculate destination (muncher's mouth)
-        // Muncher body is 80% of cell, centered. Mouth is at bottom: 18% of body.
+        // Calculate destination (nosher's mouth)
+        // Nosher body is 80% of cell, centered. Mouth is at bottom: 18% of body.
         // So mouth center is roughly at: 10% (top margin) + 80% * 0.75 = 70% from top
-        const muncherRect = this.muncherSprite.getBoundingClientRect();
-        const mouthX = muncherRect.left - gridRect.left + muncherRect.width / 2;
-        const mouthY = muncherRect.top - gridRect.top + muncherRect.height * 0.6;
+        const nosherRect = this.nosherSprite.getBoundingClientRect();
+        const mouthX = nosherRect.left - gridRect.left + nosherRect.width / 2;
+        const mouthY = nosherRect.top - gridRect.top + nosherRect.height * 0.6;
         
         // Set CSS variables for animation
         const flyX = mouthX - startX;
@@ -273,8 +273,8 @@ const Grid = {
         // Add to grid wrapper
         this.element.parentElement.appendChild(flyingNumber);
         
-        // Open muncher's mouth
-        this.muncherSprite.classList.add('eating');
+        // Open nosher's mouth
+        this.nosherSprite.classList.add('eating');
         
         // Trigger animation
         requestAnimationFrame(() => {
@@ -284,50 +284,50 @@ const Grid = {
         // Remove after animation
         setTimeout(() => {
             flyingNumber.remove();
-            this.muncherSprite.classList.remove('eating');
+            this.nosherSprite.classList.remove('eating');
         }, 300);
     },
 
-    // Check if all correct numbers have been munched
-    allCorrectMunched() {
-        return this.cells.every(cell => !cell.isCorrect || cell.munched);
+    // Check if all correct numbers have been noshed
+    allCorrectNoshed() {
+        return this.cells.every(cell => !cell.isCorrect || cell.noshed);
     },
 
     // Count remaining correct numbers
     countRemainingCorrect() {
-        return this.cells.filter(cell => cell.isCorrect && !cell.munched).length;
+        return this.cells.filter(cell => cell.isCorrect && !cell.noshed).length;
     },
 
-    // Update muncher position display (sprite-based for smooth animation)
-    updateMuncherPosition(x, y, prevX, prevY) {
+    // Update nosher position display (sprite-based for smooth animation)
+    updateNosherPosition(x, y, prevX, prevY) {
         // Remove highlight from previous cell
         if (prevX !== undefined && prevY !== undefined) {
             const prevCell = this.getCellElement(prevX, prevY);
             if (prevCell) {
-                prevCell.classList.remove('muncher-cell');
+                prevCell.classList.remove('nosher-cell');
             }
         }
 
         // Add highlight to new cell
         const newCell = this.getCellElement(x, y);
         if (newCell) {
-            newCell.classList.add('muncher-cell');
+            newCell.classList.add('nosher-cell');
         }
 
         // Move the sprite with CSS transform
-        if (this.muncherSprite) {
+        if (this.nosherSprite) {
             const pixelPos = this.getPixelPosition(x, y);
             const transform = `translate(${pixelPos.x}px, ${pixelPos.y}px)`;
-            this.muncherSprite.style.transform = transform;
+            this.nosherSprite.style.transform = transform;
             // Store current transform for animations
-            this.muncherSprite.style.setProperty('--current-transform', transform);
+            this.nosherSprite.style.setProperty('--current-transform', transform);
 
-            // Add transparency when over an unmunched cell (has a number visible)
+            // Add transparency when over an unnoshed cell (has a number visible)
             const currentCell = this.getCell(x, y);
-            if (currentCell && !currentCell.munched) {
-                this.muncherSprite.classList.add('over-number');
+            if (currentCell && !currentCell.noshed) {
+                this.nosherSprite.classList.add('over-number');
             } else {
-                this.muncherSprite.classList.remove('over-number');
+                this.nosherSprite.classList.remove('over-number');
             }
         }
     },
@@ -378,12 +378,12 @@ const Grid = {
         });
     },
 
-    // Celebrate muncher on successful munch (animate the sprite)
-    celebrateMunch() {
-        if (this.muncherSprite) {
-            this.muncherSprite.classList.add('happy');
+    // Celebrate nosher on successful nosh (animate the sprite)
+    celebrateNosh() {
+        if (this.nosherSprite) {
+            this.nosherSprite.classList.add('happy');
             setTimeout(() => {
-                this.muncherSprite.classList.remove('happy');
+                this.nosherSprite.classList.remove('happy');
             }, 400);
         }
     },

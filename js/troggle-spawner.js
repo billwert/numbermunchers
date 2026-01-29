@@ -147,16 +147,16 @@ const TroggleSpawner = {
             Grid.hideSpawnWarning(spawn.x, spawn.y);
         }
 
-        // Check if position is now blocked (by safety square or muncher)
+        // Check if position is now blocked (by safety square or nosher)
         if (typeof SafetySquares !== 'undefined' && SafetySquares.isAt(spawn.x, spawn.y)) {
             // Blocked by safety square - spawn fails
             return;
         }
 
-        if (typeof Game !== 'undefined' && Game.muncher) {
-            const mPos = Game.muncher.getPosition();
+        if (typeof Game !== 'undefined' && Game.nosher) {
+            const mPos = Game.nosher.getPosition();
             if (mPos.x === spawn.x && mPos.y === spawn.y) {
-                // Muncher is at spawn point - this counts as a collision!
+                // Nosher is at spawn point - this counts as a collision!
                 // The troggle still spawns, triggering collision check
             }
         }

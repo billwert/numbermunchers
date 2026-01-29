@@ -17,8 +17,8 @@ const Game = {
     mouseAutopilot: false,
     testingMode: false,
 
-    // Muncher reference
-    muncher: Muncher,
+    // Nosher reference
+    nosher: Nosher,
 
     // DOM elements
     elements: {
@@ -84,11 +84,11 @@ const Game = {
         // Populate grid
         Grid.populate(this.level);
 
-        // Position muncher at center-ish
+        // Position nosher at center-ish
         const startX = Math.floor(Grid.COLS / 2);
         const startY = Math.floor(Grid.ROWS / 2);
-        this.muncher.init(startX, startY);
-        Grid.updateMuncherPosition(startX, startY);
+        this.nosher.init(startX, startY);
+        Grid.updateNosherPosition(startX, startY);
 
         // Initialize safety squares
         if (typeof SafetySquares !== 'undefined') {
@@ -124,7 +124,7 @@ const Game = {
     setupInputHandlers() {
         Input.onMove = (direction) => {
             if (this.state !== 'playing') return;
-            const moved = this.muncher.move(direction);
+            const moved = this.nosher.move(direction);
             if (moved) {
                 Sound.playMove();
             }
@@ -135,7 +135,7 @@ const Game = {
 
         Input.onAction = () => {
             if (this.state === 'playing') {
-                this.handleMunch();
+                this.handleNosh();
             } else if (this.state === 'levelcomplete') {
                 this.nextLevel();
             }
@@ -152,22 +152,22 @@ const Game = {
         Input.onAnyKey = null;
     },
 
-    // Handle munch action
-    handleMunch() {
-        const result = this.muncher.munch();
+    // Handle nosh action
+    handleNosh() {
+        const result = this.nosher.nosh();
 
         if (!result.success) {
-            // Cell was already munched, do nothing
+            // Cell was already noshed, do nothing
             return;
         }
 
         if (result.isCorrect) {
-            // Correct munch!
+            // Correct nosh!
             this.correctInARow++;
-            Sound.playMunchCorrect();
+            Sound.playNoshCorrect();
 
             // Add points
-            const points = Levels.getPointsForMunch(this.level);
+            const points = Levels.getPointsForNosh(this.level);
             this.addScore(points);
 
             // Show feedback
@@ -175,17 +175,17 @@ const Game = {
             this.showFeedback(message, 'correct');
 
             // Celebrate
-            Grid.celebrateMunch();
+            Grid.celebrateNosh();
             this.spawnConfetti(5);
 
             // Check if level complete
-            if (Grid.allCorrectMunched()) {
+            if (Grid.allCorrectNoshed()) {
                 this.completeLevel();
             }
         } else {
-            // Wrong munch!
+            // Wrong nosh!
             this.correctInARow = 0;
-            Sound.playMunchWrong();
+            Sound.playNoshWrong();
 
             // Lose a life
             this.loseLife();
@@ -234,8 +234,8 @@ const Game = {
     checkTroggleCollision() {
         if (this.state !== 'playing') return;
 
-        const muncherPos = this.muncher.getPosition();
-        if (Troggle.isAtPosition(muncherPos.x, muncherPos.y)) {
+        const nosherPos = this.nosher.getPosition();
+        if (Troggle.isAtPosition(nosherPos.x, nosherPos.y)) {
             this.handleTroggleCollision();
         }
     },
@@ -255,10 +255,10 @@ const Game = {
         this.loseLife();
         this.updateDisplay();
 
-        // If still alive, respawn muncher at safe position
+        // If still alive, respawn nosher at safe position
         if (this.lives > 0) {
             const safePos = Grid.getRandomPosition(Troggle.getPositions());
-            this.muncher.setPosition(safePos.x, safePos.y);
+            this.nosher.setPosition(safePos.x, safePos.y);
         }
     },
 

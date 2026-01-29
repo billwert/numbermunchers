@@ -6,7 +6,7 @@
 const Input = {
     // Callbacks
     onMove: null,      // (direction) => {}  direction: 'up', 'down', 'left', 'right'
-    onAction: null,    // () => {}  (munch/select)
+    onAction: null,    // () => {}  (nosh/select)
     onPause: null,     // () => {}
     onAnyKey: null,    // () => {}
 
@@ -128,18 +128,18 @@ const Input = {
     },
 
     // Helper: Handle grid cell click
-    handleGridClick(cellX, cellY, muncherX, muncherY) {
+    handleGridClick(cellX, cellY, nosherX, nosherY) {
         if (!this.enabled) return;
 
-        // If clicking on muncher's cell, munch
-        if (cellX === muncherX && cellY === muncherY) {
+        // If clicking on nosher's cell, nosh
+        if (cellX === nosherX && cellY === nosherY) {
             if (this.onAction) this.onAction();
             return;
         }
 
         // If clicking adjacent cell, move there
-        const dx = cellX - muncherX;
-        const dy = cellY - muncherY;
+        const dx = cellX - nosherX;
+        const dy = cellY - nosherY;
 
         if (Math.abs(dx) + Math.abs(dy) === 1) {
             if (dx === 1 && this.onMove) this.onMove('right');

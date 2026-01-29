@@ -31,11 +31,11 @@ const SafetySquares = {
     addSafetySquare() {
         if (this.squares.length >= this.maxSquares) return false;
 
-        // Build exclusion list: muncher, troggles, existing safety squares
+        // Build exclusion list: nosher, troggles, existing safety squares
         const exclude = this.squares.map(s => ({ x: s.x, y: s.y }));
 
-        if (typeof Game !== 'undefined' && Game.muncher) {
-            const mPos = Game.muncher.getPosition();
+        if (typeof Game !== 'undefined' && Game.nosher) {
+            const mPos = Game.nosher.getPosition();
             exclude.push(mPos);
         }
 

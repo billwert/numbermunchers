@@ -135,8 +135,8 @@ const Levels = {
         return 1 + (level - 1) * 0.1;
     },
 
-    // Points for correct munch
-    getPointsForMunch(level) {
+    // Points for correct nosh
+    getPointsForNosh(level) {
         return 5 + Math.floor(level / 3);
     },
 

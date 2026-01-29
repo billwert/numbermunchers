@@ -3,8 +3,8 @@
    ========================================= */
 
 const Storage = {
-    STORAGE_KEY: 'numberMunchersHighScores',
-    SETTINGS_KEY: 'numberMunchersSettings',
+    STORAGE_KEY: 'numberNoshersHighScores',
+    SETTINGS_KEY: 'numberNoshersSettings',
     MAX_SCORES: 10,
 
     // Get all high scores
