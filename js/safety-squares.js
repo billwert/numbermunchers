@@ -10,10 +10,10 @@ const SafetySquares = {
     // Maximum number of safety squares
     maxSquares: 3,
 
-    // Lifetime range in ms
-    minLifetime: 2000,
-    maxLifetime: 5000,
-    flashDuration: 500, // Flash in last 500ms
+    // Lifetime range in ticks (not real-time, so pause doesn't affect it)
+    minLifetimeTicks: 3,
+    maxLifetimeTicks: 8,
+    flashTicks: 1, // Flash warning in last tick before expiring
 
     // Initialize for a level
     init(level) {
@@ -47,12 +47,13 @@ const SafetySquares = {
         if (typeof Grid !== 'undefined') {
             const pos = Grid.getRandomPosition(exclude);
             if (pos) {
-                const lifetime = this.minLifetime + Math.random() * (this.maxLifetime - this.minLifetime);
+                const lifetimeTicks = this.minLifetimeTicks + Math.floor(Math.random() * (this.maxLifetimeTicks - this.minLifetimeTicks + 1));
+                const currentTick = (typeof GameLoop !== 'undefined') ? GameLoop.currentTick : 0;
                 const square = {
                     x: pos.x,
                     y: pos.y,
-                    lifetime: lifetime,
-                    createdAt: Date.now()
+                    lifetimeTicks: lifetimeTicks,
+                    createdAtTick: currentTick
                 };
                 this.squares.push(square);
                 Grid.markSafetySquare(pos.x, pos.y, true);
@@ -83,18 +84,18 @@ const SafetySquares = {
 
     // Update called each tick - check lifetimes and spawn new ones
     update() {
-        const now = Date.now();
+        const currentTick = (typeof GameLoop !== 'undefined') ? GameLoop.currentTick : 0;
         const toRemove = [];
 
         // Check each square's lifetime
         this.squares.forEach(sq => {
-            const elapsed = now - sq.createdAt;
-            const remaining = sq.lifetime - elapsed;
+            const elapsedTicks = currentTick - sq.createdAtTick;
+            const remainingTicks = sq.lifetimeTicks - elapsedTicks;
 
-            if (remaining <= 0) {
+            if (remainingTicks <= 0) {
                 // Expired - mark for removal
                 toRemove.push(sq);
-            } else if (remaining <= this.flashDuration) {
+            } else if (remainingTicks <= this.flashTicks) {
                 // Flash warning - about to expire
                 Grid.markSafetySquareExpiring(sq.x, sq.y, true);
             }
