@@ -170,6 +170,10 @@ const Main = {
             case 'menu':
                 this.setupMenuInput();
                 break;
+            case 'gamemode':
+                this.setupGameModeScreen();
+                this.setupGameModeInput();
+                break;
             case 'highscores':
                 this.displayHighScores();
                 this.setupBackInput();
@@ -249,8 +253,7 @@ const Main = {
 
         switch (action) {
             case 'new-game':
-                this.showScreen('game');
-                Game.startNewGame();
+                this.showScreen('gamemode');
                 break;
             case 'high-scores':
                 this.showScreen('highscores');
@@ -540,12 +543,107 @@ const Main = {
                 this.gameOverSelectedIndex = 0;
                 this.updateGameOverSelection();
                 break;
+            case 'start-mode':
+                this.startSelectedMode();
+                break;
             case 'play-again':
                 this.showScreen('game');
-                Game.startNewGame();
+                Game.startNewGame(Game.gameMode);
                 break;
         }
     },
+
+    // ── Game Mode Selection Screen ───────────────────
+
+    selectedModeIndex: 0,
+
+    setupGameModeScreen() {
+        const tabsContainer = document.getElementById('gamemode-tabs');
+        const modes = Levels.gameModeOrder;
+
+        tabsContainer.innerHTML = '';
+        modes.forEach((modeId, i) => {
+            const mode = Levels.gameModes[modeId];
+            const tab = document.createElement('button');
+            tab.className = 'gamemode-tab' + (i === this.selectedModeIndex ? ' selected' : '');
+            tab.dataset.mode = modeId;
+            tab.innerHTML = `<span class="tab-icon">${mode.icon}</span>${mode.name}`;
+
+            tab.addEventListener('click', () => {
+                if (this.selectedModeIndex === i) {
+                    // Already selected, start the game
+                    this.startSelectedMode();
+                } else {
+                    this.selectedModeIndex = i;
+                    this.updateGameModeSelection();
+                }
+            });
+
+            tab.addEventListener('mouseenter', () => {
+                if (this.currentScreen === 'gamemode') {
+                    this.selectedModeIndex = i;
+                    this.updateGameModeSelection();
+                }
+            });
+
+            tabsContainer.appendChild(tab);
+        });
+
+        this.selectedModeIndex = 0;
+        this.updateGameModeSelection();
+    },
+
+    updateGameModeSelection() {
+        const modes = Levels.gameModeOrder;
+        const modeId = modes[this.selectedModeIndex];
+        const mode = Levels.gameModes[modeId];
+
+        // Update tab highlights
+        const tabs = document.querySelectorAll('.gamemode-tab');
+        tabs.forEach((tab, i) => {
+            tab.classList.toggle('selected', i === this.selectedModeIndex);
+        });
+
+        // Update info pane
+        document.getElementById('gamemode-description').textContent = mode.description;
+        const examplesDiv = document.getElementById('gamemode-examples');
+        examplesDiv.innerHTML = mode.examples.map(ex => `<p>${ex}</p>`).join('');
+    },
+
+    setupGameModeInput() {
+        Input.clearCallbacks();
+
+        const modes = Levels.gameModeOrder;
+
+        Input.onMove = (direction) => {
+            if (direction === 'left') {
+                this.selectedModeIndex = Math.max(0, this.selectedModeIndex - 1);
+            } else if (direction === 'right') {
+                this.selectedModeIndex = Math.min(modes.length - 1, this.selectedModeIndex + 1);
+            }
+            this.updateGameModeSelection();
+            Sound.playMove();
+        };
+
+        Input.onAction = () => {
+            this.startSelectedMode();
+        };
+
+        Input.onPause = () => {
+            this.showScreen('menu');
+        };
+
+        Input.onAnyKey = null;
+    },
+
+    startSelectedMode() {
+        const modeId = Levels.gameModeOrder[this.selectedModeIndex];
+        Sound.playMenuSelect();
+        this.showScreen('game');
+        Game.startNewGame(modeId);
+    },
+
+    // ── Settings ──────────────────────────────────────
 
     // Set up settings UI event handlers
     setupSettingsUI() {

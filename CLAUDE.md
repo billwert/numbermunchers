@@ -40,7 +40,7 @@ numbernoshers/
 - All screens are in `index.html` with class `.screen`
 - Only one screen active at a time (`.active` class)
 - `Main.showScreen(screenName)` handles transitions
-- Screens: splash, menu, game, gameover, highscores, howtoplay, settings
+- Screens: splash, menu, gamemode, game, gameover, highscores, howtoplay, settings
 
 ### Input System
 - **Unified input handler** in `input.js`
@@ -55,7 +55,18 @@ numbernoshers/
 
 ## Key Components
 
+### Game Modes (`levels.js`)
+- **Multiples** - Find multiples of N (e.g., multiples of 3: 6, 9, 12...)
+- **Factors** - Find factors of N (e.g., factors of 12: 1, 2, 3, 4, 6, 12)
+- **Primes** - Find prime numbers in the grid
+- **Equals** - Find math expressions that equal target N (grid shows "3 + 7", "2 × 5", etc.)
+- **Not Equal** - Find math expressions that do NOT equal target N
+- Mode selected via `gamemode` screen before starting game
+- `Game.gameMode` stores current mode, passed through `Levels.getRuleText(level, mode)` and `Levels.generateGridNumbers(level, gridSize, mode)`
+- For Equality/Inequality modes, grid cells contain expression strings; cells get `.expression-cell` CSS class for smaller font
+
 ### Grid System (`grid.js`)
+
 - 6 columns × 5 rows
 - Each cell: `{value, isCorrect, noshed, x, y}`
 - Nosher sprite positioned absolutely with CSS transforms

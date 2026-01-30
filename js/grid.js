@@ -157,8 +157,8 @@ const Grid = {
     },
 
     // Populate grid with numbers for a level
-    populate(level) {
-        const numbers = Levels.generateGridNumbers(level, this.COLS * this.ROWS);
+    populate(level, mode) {
+        const numbers = Levels.generateGridNumbers(level, this.COLS * this.ROWS, mode);
         this.cells = numbers.map((n, i) => ({
             ...n,
             noshed: false,
@@ -185,6 +185,10 @@ const Grid = {
                 numberSpan.textContent = '';
             } else {
                 numberSpan.textContent = data.value;
+                // Add expression class for wider values (equality/inequality modes)
+                if (typeof data.value === 'string' && data.value.length > 3) {
+                    cell.classList.add('expression-cell');
+                }
             }
         });
     },

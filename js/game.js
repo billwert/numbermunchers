@@ -13,6 +13,9 @@ const Game = {
     correctInARow: 0,
     lastExtraLifeScore: 0,
 
+    // Game mode
+    gameMode: 'multiples',
+
     // Settings
     mouseAutopilot: false,
     testingMode: false,
@@ -52,7 +55,8 @@ const Game = {
     },
 
     // Start a new game
-    startNewGame() {
+    startNewGame(mode) {
+        this.gameMode = mode || 'multiples';
         this.score = 0;
         this.lives = 4;
         this.level = 1;
@@ -76,13 +80,13 @@ const Game = {
         Grid.scaleToViewport();
 
         // Update rule display
-        this.elements.rule.textContent = Levels.getRuleText(this.level);
+        this.elements.rule.textContent = Levels.getRuleText(this.level, this.gameMode);
 
         // Clear any previous special cells
         Grid.clearSpecialCells();
 
         // Populate grid
-        Grid.populate(this.level);
+        Grid.populate(this.level, this.gameMode);
 
         // Position nosher at center-ish
         const startX = Math.floor(Grid.COLS / 2);
