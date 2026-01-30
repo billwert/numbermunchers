@@ -27,6 +27,9 @@ const Main = {
         // Set up resume overlay for background return
         this.setupResumeOverlay();
 
+        // Set up dev mode (Ctrl+Shift+D or ?dev=1)
+        this.setupDevMode();
+
         // Show splash screen
         this.showScreen('splash');
         this.setupSplashInput();
@@ -731,6 +734,108 @@ const Main = {
         };
 
         Input.onAnyKey = null;
+    },
+
+    // =========================================
+    //  DEV MODE: Isometric angle controls
+    // =========================================
+    setupDevMode() {
+        const panel = document.getElementById('dev-panel');
+        if (!panel) return;
+
+        const defaults = {
+            perspective: 800,
+            rotateX: 55,
+            rotateZ: 0,
+            scale: 1.0
+        };
+
+        const sliders = {
+            perspective: document.getElementById('dev-perspective'),
+            rotateX: document.getElementById('dev-rotate-x'),
+            rotateZ: document.getElementById('dev-rotate-z'),
+            scale: document.getElementById('dev-scale')
+        };
+
+        const labels = {
+            perspective: document.getElementById('dev-perspective-val'),
+            rotateX: document.getElementById('dev-rotate-x-val'),
+            rotateZ: document.getElementById('dev-rotate-z-val'),
+            scale: document.getElementById('dev-scale-val')
+        };
+
+        const cssVars = {
+            perspective: '--iso-perspective',
+            rotateX: '--iso-rotate-x',
+            rotateZ: '--iso-rotate-z',
+            scale: '--iso-scale'
+        };
+
+        const units = {
+            perspective: 'px',
+            rotateX: 'deg',
+            rotateZ: 'deg',
+            scale: ''
+        };
+
+        const updateCSS = (key, value) => {
+            const unit = units[key];
+            document.documentElement.style.setProperty(cssVars[key], value + unit);
+            labels[key].textContent = value;
+            // Rescale grid when rotateX changes (affects visible height)
+            if (key === 'rotateX' && typeof Grid !== 'undefined') {
+                Grid.scaleToViewport();
+            }
+        };
+
+        // Wire up sliders
+        Object.keys(sliders).forEach(key => {
+            sliders[key].addEventListener('input', (e) => {
+                updateCSS(key, e.target.value);
+            });
+        });
+
+        // Toggle panel visibility
+        const togglePanel = () => {
+            panel.classList.toggle('hidden');
+        };
+
+        // Close button
+        document.getElementById('dev-panel-close').addEventListener('click', togglePanel);
+
+        // Reset button
+        document.getElementById('dev-reset').addEventListener('click', () => {
+            Object.keys(defaults).forEach(key => {
+                sliders[key].value = defaults[key];
+                updateCSS(key, defaults[key]);
+            });
+        });
+
+        // Copy CSS values button
+        document.getElementById('dev-copy').addEventListener('click', () => {
+            const values = Object.keys(sliders).map(key => {
+                return `${cssVars[key]}: ${sliders[key].value}${units[key]};`;
+            }).join('\n');
+            navigator.clipboard.writeText(values).then(() => {
+                const btn = document.getElementById('dev-copy');
+                const orig = btn.textContent;
+                btn.textContent = 'Copied!';
+                setTimeout(() => { btn.textContent = orig; }, 1500);
+            });
+        });
+
+        // Keyboard shortcut: Ctrl+Shift+D
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.shiftKey && e.key === 'D') {
+                e.preventDefault();
+                togglePanel();
+            }
+        });
+
+        // URL parameter: ?dev=1
+        if (new URLSearchParams(window.location.search).get('dev') === '1') {
+            panel.classList.remove('hidden');
+        }
     }
 };
 

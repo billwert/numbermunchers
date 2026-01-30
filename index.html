@@ -248,6 +248,36 @@
     <!-- Confetti Container -->
     <div id="confetti-container" class="confetti-container"></div>
 
+    <!-- Dev Mode: Isometric Controls (Ctrl+Shift+D or ?dev=1) -->
+    <div id="dev-panel" class="dev-panel hidden">
+        <div class="dev-panel-header">
+            <span>Isometric Controls</span>
+            <button id="dev-panel-close" class="dev-close-btn">&times;</button>
+        </div>
+        <div class="dev-panel-body">
+            <label>
+                <span class="dev-label">Perspective: <span id="dev-perspective-val">800</span>px</span>
+                <input type="range" id="dev-perspective" min="200" max="2000" value="800" step="50">
+            </label>
+            <label>
+                <span class="dev-label">Rotate X: <span id="dev-rotate-x-val">55</span>&deg;</span>
+                <input type="range" id="dev-rotate-x" min="0" max="80" value="55" step="1">
+            </label>
+            <label>
+                <span class="dev-label">Rotate Z: <span id="dev-rotate-z-val">0</span>&deg;</span>
+                <input type="range" id="dev-rotate-z" min="-45" max="45" value="0" step="1">
+            </label>
+            <label>
+                <span class="dev-label">Scale: <span id="dev-scale-val">1.0</span></span>
+                <input type="range" id="dev-scale" min="0.5" max="2.0" value="1.0" step="0.05">
+            </label>
+            <div class="dev-buttons">
+                <button id="dev-reset" class="dev-btn">Reset</button>
+                <button id="dev-copy" class="dev-btn">Copy Values</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Scripts -->
     <script src="js/storage.js"></script>
     <script src="js/sound.js"></script>

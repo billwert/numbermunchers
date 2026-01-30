@@ -60,15 +60,23 @@ const Grid = {
         // Available space for grid (no touch controls anymore)
         const availableWidth = viewportWidth - padding * 2;
         const availableHeight = viewportHeight - headerHeight - padding * 2;
-        
+
+        // Account for isometric tilt: rotateX compresses visible height by cos(angle)
+        const isoAngleStr = getComputedStyle(document.documentElement)
+            .getPropertyValue('--iso-rotate-x').trim();
+        const isoAngle = parseFloat(isoAngleStr) || 0;
+        const cosAngle = Math.cos(isoAngle * Math.PI / 180);
+        // Grid needs more pre-transform height to fit in the compressed view
+        const adjustedHeight = availableHeight / Math.max(cosAngle, 0.3);
+
         // Grid has 6 columns, 5 rows, gaps, padding, and border
         const gridPadding = 10;
         const gridBorder = 3;
         const gap = Math.max(2, Math.min(6, availableWidth * 0.005));
-        
+
         // Calculate cell size to fit
         const cellFromWidth = (availableWidth - gridPadding * 2 - gridBorder * 2 - gap * 5) / 6;
-        const cellFromHeight = (availableHeight - gridPadding * 2 - gridBorder * 2 - gap * 4) / 5;
+        const cellFromHeight = (adjustedHeight - gridPadding * 2 - gridBorder * 2 - gap * 4) / 5;
         
         const cellSize = Math.floor(Math.min(cellFromWidth, cellFromHeight));
         
@@ -244,43 +252,43 @@ const Grid = {
         const flyingNumber = document.createElement('div');
         flyingNumber.className = 'flying-number';
         flyingNumber.textContent = value;
-        
-        // Get cell position
-        const cellRect = cellElement.getBoundingClientRect();
-        const gridRect = this.element.getBoundingClientRect();
-        
-        // Position at cell center (relative to grid wrapper)
-        const startX = cellRect.left - gridRect.left + cellRect.width / 2;
-        const startY = cellRect.top - gridRect.top + cellRect.height / 2;
-        
+
+        // Use grid-based coordinates (pre-transform space) instead of
+        // getBoundingClientRect (post-transform screen space), so the
+        // animation works correctly with isometric 3D transforms.
+        const cellX = parseInt(cellElement.dataset.x);
+        const cellY = parseInt(cellElement.dataset.y);
+        const cellPos = this.getPixelPosition(cellX, cellY);
+        const halfCell = this.cellSize / 2;
+        const startX = cellPos.x + halfCell;
+        const startY = cellPos.y + halfCell;
+
         flyingNumber.style.left = startX + 'px';
         flyingNumber.style.top = startY + 'px';
         flyingNumber.style.transform = 'translate(-50%, -50%)';
-        
-        // Calculate destination (nosher's mouth)
-        // Nosher body is 80% of cell, centered. Mouth is at bottom: 18% of body.
-        // So mouth center is roughly at: 10% (top margin) + 80% * 0.75 = 70% from top
-        const nosherRect = this.nosherSprite.getBoundingClientRect();
-        const mouthX = nosherRect.left - gridRect.left + nosherRect.width / 2;
-        const mouthY = nosherRect.top - gridRect.top + nosherRect.height * 0.6;
-        
+
+        // Calculate destination (nosher's mouth) using grid coordinates
+        const nosherPos = this.getPixelPosition(Game.nosher.x, Game.nosher.y);
+        const mouthX = nosherPos.x + halfCell;
+        const mouthY = nosherPos.y + this.cellSize * 0.6;
+
         // Set CSS variables for animation
         const flyX = mouthX - startX;
         const flyY = mouthY - startY;
         flyingNumber.style.setProperty('--fly-x', flyX + 'px');
         flyingNumber.style.setProperty('--fly-y', flyY + 'px');
-        
+
         // Add to grid wrapper
         this.element.parentElement.appendChild(flyingNumber);
-        
+
         // Open nosher's mouth
         this.nosherSprite.classList.add('eating');
-        
+
         // Trigger animation
         requestAnimationFrame(() => {
             flyingNumber.classList.add('animate');
         });
-        
+
         // Remove after animation
         setTimeout(() => {
             flyingNumber.remove();

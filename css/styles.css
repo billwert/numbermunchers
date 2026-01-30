@@ -41,6 +41,12 @@
     --grid-gap: 4px;
     --border-radius: 12px;
 
+    /* Isometric view */
+    --iso-perspective: 800px;
+    --iso-rotate-x: 55deg;
+    --iso-rotate-z: 0deg;
+    --iso-scale: 1.0;
+
     /* Fonts - use system fonts that work across platforms */
     --font-main: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     --font-display: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -580,6 +586,7 @@ body {
     max-width: 100%;
     height: 100%;
     padding: 10px;
+    perspective: var(--iso-perspective);
 }
 
 .game-header {
@@ -671,6 +678,9 @@ body {
 .grid-wrapper {
     position: relative;
     display: inline-block;
+    transform-style: preserve-3d;
+    transform: rotateX(var(--iso-rotate-x)) rotateZ(var(--iso-rotate-z)) scale(var(--iso-scale));
+    transform-origin: center center;
 }
 
 .game-grid {
@@ -684,6 +694,24 @@ body {
     border: 3px solid var(--color-cell-border);
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3),
                 inset 0 0 20px rgba(0, 0, 0, 0.2);
+    /* Depth effect: the grid board has thickness */
+    transform-style: preserve-3d;
+}
+
+/* Board thickness / side face visible when tilted */
+.game-grid::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 12px;
+    background: linear-gradient(to bottom, var(--color-bg-light), #0d1425);
+    border-radius: 0 0 var(--border-radius) var(--border-radius);
+    border: 3px solid var(--color-cell-border);
+    border-top: none;
+    transform: rotateX(-90deg);
+    transform-origin: top center;
 }
 
 .grid-cell {
@@ -1341,4 +1369,130 @@ body {
     25% { transform: scale(1.1) translateY(-5px); }
     50% { transform: scale(0.95); }
     75% { transform: scale(1.05); }
+}
+
+/* =========================================
+   DEV MODE: ISOMETRIC CONTROLS PANEL
+   ========================================= */
+.dev-panel {
+    position: fixed;
+    bottom: 16px;
+    right: 16px;
+    width: 280px;
+    background: rgba(22, 33, 62, 0.95);
+    border: 2px solid var(--color-cell-border);
+    border-radius: var(--border-radius);
+    z-index: 9999;
+    font-family: var(--font-main);
+    color: var(--color-text);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(8px);
+}
+
+.dev-panel.hidden {
+    display: none;
+}
+
+.dev-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--color-cell-border);
+    font-weight: bold;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-secondary);
+}
+
+.dev-close-btn {
+    background: none;
+    border: none;
+    color: var(--color-text-muted);
+    font-size: 1.3rem;
+    cursor: pointer;
+    padding: 0 4px;
+    line-height: 1;
+}
+
+.dev-close-btn:hover {
+    color: var(--color-danger);
+}
+
+.dev-panel-body {
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.dev-panel-body label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.dev-label {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+}
+
+.dev-label span {
+    color: var(--color-text);
+    font-weight: bold;
+}
+
+.dev-panel-body input[type="range"] {
+    width: 100%;
+    height: 6px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: var(--color-cell-bg);
+    border-radius: 3px;
+    outline: none;
+    cursor: pointer;
+}
+
+.dev-panel-body input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--color-primary);
+    border: 2px solid var(--color-primary-dark);
+    cursor: pointer;
+}
+
+.dev-panel-body input[type="range"]::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--color-primary);
+    border: 2px solid var(--color-primary-dark);
+    cursor: pointer;
+}
+
+.dev-buttons {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.dev-btn {
+    flex: 1;
+    padding: 6px 10px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    border: 1px solid var(--color-cell-border);
+    border-radius: 6px;
+    background: var(--color-cell-bg);
+    color: var(--color-text);
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.dev-btn:hover {
+    background: var(--color-cell-hover);
 }
