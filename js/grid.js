@@ -70,37 +70,41 @@ const Grid = {
         const gridBorder = 3;
         const gap = Math.max(2, Math.min(6, availableWidth * 0.005));
 
-        // First pass: max cell size from available space (ignoring transform)
+        // Calculate base cell size from available space (without transforms)
         const cellFromWidth = (availableWidth - gridPadding * 2 - gridBorder * 2 - gap * 5) / 6;
         const cellFromHeight = (availableHeight - gridPadding * 2 - gridBorder * 2 - gap * 4) / 5;
-        let cellSize = Math.floor(Math.min(cellFromWidth, cellFromHeight));
+        let baseCellSize = Math.floor(Math.min(cellFromWidth, cellFromHeight));
 
-        // Set header width from pre-fit cell size (independent of isometric shrinking)
-        const headerWidth = cellSize * 6 + gap * 5 + gridPadding * 2 + gridBorder * 2;
-        document.documentElement.style.setProperty('--header-width', headerWidth + 'px');
+        // Pre-transform grid dimensions
+        const gridW = baseCellSize * 6 + gap * 5 + gridPadding * 2 + gridBorder * 2;
+        const gridH = baseCellSize * 5 + gap * 4 + gridPadding * 2 + gridBorder * 2;
 
-        // Calculate pre-transform grid dimensions at this cell size
-        const gridW = headerWidth; // same formula
-        const gridH = cellSize * 5 + gap * 4 + gridPadding * 2 + gridBorder * 2;
-
-        // Post-transform bounding box:
+        // Calculate post-transform bounding box
         // rotateX compresses height, then rotateZ rotates the result
         const compressedH = gridH * Math.cos(rotX);
-        const apparentW = (gridW * Math.abs(Math.cos(rotZ)) + compressedH * Math.abs(Math.sin(rotZ))) * isoScale;
-        const apparentH = (gridW * Math.abs(Math.sin(rotZ)) + compressedH * Math.abs(Math.cos(rotZ))) * isoScale;
+        const transformedW = (gridW * Math.abs(Math.cos(rotZ)) + compressedH * Math.abs(Math.sin(rotZ))) * isoScale;
+        const transformedH = (gridW * Math.abs(Math.sin(rotZ)) + compressedH * Math.abs(Math.cos(rotZ))) * isoScale;
 
-        // Scale down cell size if transformed board exceeds available space
-        const fitRatio = Math.min(availableWidth / apparentW, availableHeight / apparentH, 1);
-        if (fitRatio < 1) {
-            cellSize = Math.floor(cellSize * fitRatio);
+        // Calculate effective scale that keeps the board in bounds
+        // Start with the user's requested scale, then cap if it would overflow
+        let effectiveScale = isoScale;
+        const maxScaleW = availableWidth / (gridW * Math.abs(Math.cos(rotZ)) + compressedH * Math.abs(Math.sin(rotZ)));
+        const maxScaleH = availableHeight / (gridW * Math.abs(Math.sin(rotZ)) + compressedH * Math.abs(Math.cos(rotZ)));
+        const maxScale = Math.min(maxScaleW, maxScaleH);
+        
+        // Cap the effective scale if needed
+        if (effectiveScale > maxScale) {
+            effectiveScale = maxScale;
         }
 
-        // Set CSS variables (cell-size may be smaller than pre-fit; header-width stays)
-        document.documentElement.style.setProperty('--cell-size', cellSize + 'px');
+        // Set CSS variables
+        document.documentElement.style.setProperty('--cell-size', baseCellSize + 'px');
         document.documentElement.style.setProperty('--grid-gap', gap + 'px');
+        // Apply the effective (possibly capped) scale via a separate CSS variable
+        document.documentElement.style.setProperty('--iso-effective-scale', effectiveScale);
 
         // Update cached dimensions
-        this.cellSize = cellSize;
+        this.cellSize = baseCellSize;
         this.gridGap = gap;
 
         // Update nosher position if game is active (also refreshes counter-rotation)
@@ -344,7 +348,17 @@ const Grid = {
             const style = getComputedStyle(document.documentElement);
             const rx = parseFloat(style.getPropertyValue('--iso-rotate-x')) || 0;
             const rz = parseFloat(style.getPropertyValue('--iso-rotate-z')) || 0;
-            const transform = `translate(${pixelPos.x}px, ${pixelPos.y}px) rotateZ(${-rz}deg) rotateX(${-rx}deg)`;
+            
+            // Calculate offset to keep sprite at visual "bottom" of cell as Z rotates
+            // When the board rotates through Z, the visual bottom shifts.
+            // We offset the sprite in the pre-transform space to compensate.
+            const rzRad = rz * Math.PI / 180;
+            const halfCell = this.cellSize / 2;
+            // Offset moves sprite toward the new visual "down" direction
+            const offsetX = Math.sin(rzRad) * halfCell * 0.15;
+            const offsetY = (1 - Math.cos(rzRad)) * halfCell * 0.15;
+            
+            const transform = `translate(${pixelPos.x + offsetX}px, ${pixelPos.y + offsetY}px) rotateZ(${-rz}deg) rotateX(${-rx}deg)`;
             this.nosherSprite.style.transform = transform;
             // Store current transform for animations (bounce composites on top)
             this.nosherSprite.style.setProperty('--current-transform', transform);

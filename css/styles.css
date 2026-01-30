@@ -592,8 +592,8 @@ body {
 .game-header {
     position: relative;
     width: 100%;
-    /* Width set by JS from pre-fit cell size, independent of isometric shrinking */
-    max-width: var(--header-width, calc(6 * var(--cell-size) + 5 * var(--grid-gap) + 26px));
+    /* Fixed width based on viewport, completely independent of isometric transforms */
+    max-width: min(95vw, 600px);
     text-align: center;
     flex-shrink: 0;
 }
@@ -681,7 +681,8 @@ body {
     position: relative;
     display: inline-block;
     transform-style: preserve-3d;
-    transform: rotateX(var(--iso-rotate-x)) rotateZ(var(--iso-rotate-z)) scale(var(--iso-scale));
+    /* Use effective scale which may be capped to prevent overflow */
+    transform: rotateX(var(--iso-rotate-x)) rotateZ(var(--iso-rotate-z)) scale(var(--iso-effective-scale, var(--iso-scale)));
     transform-origin: center center;
     /* Center in remaining vertical space below the header */
     margin-top: auto;
@@ -748,21 +749,23 @@ body {
     top: 50%;
     left: 50%;
     /* Counter-rotate to stay upright, with subtle skew for surface feel */
+    /* translateZ brings numbers forward in 3D space so they appear in front of sprites */
     transform: translate(-50%, -50%)
                rotateZ(calc(-1 * var(--iso-rotate-z)))
                rotateX(calc(-1 * var(--iso-rotate-x)))
-               skewX(calc(var(--iso-rotate-z) * 0.3));
+               skewX(calc(var(--iso-rotate-z) * 0.3))
+               translateZ(20px);
     /* Pivot at bottom edge so number "stands on" the cell, not through it */
     transform-origin: center bottom;
     animation: wiggle 2s ease-in-out infinite;
     animation-delay: calc(var(--wiggle-delay) * 0.1s);
-    z-index: 20;
+    z-index: 50;
 }
 
 @keyframes wiggle {
-    0%, 100% { transform: translate(-50%, -50%) rotateZ(calc(-1 * var(--iso-rotate-z))) rotateX(calc(-1 * var(--iso-rotate-x))) skewX(calc(var(--iso-rotate-z) * 0.3)) rotate(0deg); }
-    25% { transform: translate(-50%, -50%) rotateZ(calc(-1 * var(--iso-rotate-z))) rotateX(calc(-1 * var(--iso-rotate-x))) skewX(calc(var(--iso-rotate-z) * 0.3)) rotate(-3deg); }
-    75% { transform: translate(-50%, -50%) rotateZ(calc(-1 * var(--iso-rotate-z))) rotateX(calc(-1 * var(--iso-rotate-x))) skewX(calc(var(--iso-rotate-z) * 0.3)) rotate(3deg); }
+    0%, 100% { transform: translate(-50%, -50%) rotateZ(calc(-1 * var(--iso-rotate-z))) rotateX(calc(-1 * var(--iso-rotate-x))) skewX(calc(var(--iso-rotate-z) * 0.3)) translateZ(20px) rotate(0deg); }
+    25% { transform: translate(-50%, -50%) rotateZ(calc(-1 * var(--iso-rotate-z))) rotateX(calc(-1 * var(--iso-rotate-x))) skewX(calc(var(--iso-rotate-z) * 0.3)) translateZ(20px) rotate(-3deg); }
+    75% { transform: translate(-50%, -50%) rotateZ(calc(-1 * var(--iso-rotate-z))) rotateX(calc(-1 * var(--iso-rotate-x))) skewX(calc(var(--iso-rotate-z) * 0.3)) translateZ(20px) rotate(3deg); }
 }
 
 .grid-cell.noshed {
