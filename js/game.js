@@ -480,6 +480,7 @@ const Game = {
         Grid.clearSpecialCells();
 
         Sound.stopMusic();
+        document.getElementById('game-grid').classList.remove('paused');
         document.getElementById('pause-overlay').classList.remove('active');
         document.getElementById('level-complete-overlay').classList.remove('active');
         Main.showScreen('menu');
