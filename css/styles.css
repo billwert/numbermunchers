@@ -728,6 +728,8 @@ body {
     position: relative;
     -webkit-user-select: none;
     -webkit-touch-callout: none;
+    /* 3D context so child counter-rotations work in 3D space */
+    transform-style: preserve-3d;
 }
 
 .grid-cell:hover {
@@ -740,16 +742,20 @@ body {
     position: absolute;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%);
+    /* Counter-rotate to stay upright, with subtle skew for surface feel */
+    transform: translate(-50%, -50%)
+               rotateZ(calc(-1 * var(--iso-rotate-z)))
+               rotateX(calc(-1 * var(--iso-rotate-x)))
+               skewX(calc(var(--iso-rotate-z) * 0.3));
     animation: wiggle 2s ease-in-out infinite;
     animation-delay: calc(var(--wiggle-delay) * 0.1s);
     z-index: 20;
 }
 
 @keyframes wiggle {
-    0%, 100% { transform: translate(-50%, -50%) rotate(0deg); }
-    25% { transform: translate(-50%, -50%) rotate(-3deg); }
-    75% { transform: translate(-50%, -50%) rotate(3deg); }
+    0%, 100% { transform: translate(-50%, -50%) rotateZ(calc(-1 * var(--iso-rotate-z))) rotateX(calc(-1 * var(--iso-rotate-x))) skewX(calc(var(--iso-rotate-z) * 0.3)) rotate(0deg); }
+    25% { transform: translate(-50%, -50%) rotateZ(calc(-1 * var(--iso-rotate-z))) rotateX(calc(-1 * var(--iso-rotate-x))) skewX(calc(var(--iso-rotate-z) * 0.3)) rotate(-3deg); }
+    75% { transform: translate(-50%, -50%) rotateZ(calc(-1 * var(--iso-rotate-z))) rotateX(calc(-1 * var(--iso-rotate-x))) skewX(calc(var(--iso-rotate-z) * 0.3)) rotate(3deg); }
 }
 
 .grid-cell.noshed {
@@ -908,7 +914,7 @@ body {
     border-color: var(--color-cell-border);
 }
 
-/* Troggle emoji - scaled to cell size */
+/* Troggle emoji - scaled to cell size, counter-rotated to stay upright */
 .grid-cell.has-troggle::before {
     content: attr(data-troggle-emoji);
     position: absolute;
@@ -949,13 +955,13 @@ body {
 }
 
 @keyframes troggle-wobble {
-    0%, 100% { transform: translateX(0); }
-    50% { transform: translateX(2px); }
+    0%, 100% { transform: rotateZ(calc(-1 * var(--iso-rotate-z))) rotateX(calc(-1 * var(--iso-rotate-x))) translateX(0); }
+    50% { transform: rotateZ(calc(-1 * var(--iso-rotate-z))) rotateX(calc(-1 * var(--iso-rotate-x))) translateX(2px); }
 }
 
 @keyframes troggle-pulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.02); }
+    0%, 100% { transform: rotateZ(calc(-1 * var(--iso-rotate-z))) rotateX(calc(-1 * var(--iso-rotate-x))) scale(1); }
+    50% { transform: rotateZ(calc(-1 * var(--iso-rotate-z))) rotateX(calc(-1 * var(--iso-rotate-x))) scale(1.02); }
 }
 
 /* Safety Squares - white corner brackets */

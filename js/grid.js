@@ -48,47 +48,58 @@ const Grid = {
         if (!gameScreen.classList.contains('active')) return;
 
         const header = document.querySelector('.game-header');
-        
+
         // Get available space
         const viewportWidth = window.innerWidth;
         const viewportHeight = window.innerHeight;
-        const padding = 20; // Padding around edges
-        
-        // Calculate header height
-        const headerHeight = header ? header.offsetHeight + 15 : 0; // +15 for gap
-        
-        // Available space for grid (no touch controls anymore)
+        const padding = 20;
+
+        const headerHeight = header ? header.offsetHeight + 15 : 0;
+
         const availableWidth = viewportWidth - padding * 2;
         const availableHeight = viewportHeight - headerHeight - padding * 2;
 
-        // Account for isometric tilt: rotateX compresses visible height by cos(angle)
-        const isoAngleStr = getComputedStyle(document.documentElement)
-            .getPropertyValue('--iso-rotate-x').trim();
-        const isoAngle = parseFloat(isoAngleStr) || 0;
-        const cosAngle = Math.cos(isoAngle * Math.PI / 180);
-        // Grid needs more pre-transform height to fit in the compressed view
-        const adjustedHeight = availableHeight / Math.max(cosAngle, 0.3);
+        // Read isometric transform parameters
+        const style = getComputedStyle(document.documentElement);
+        const rotX = (parseFloat(style.getPropertyValue('--iso-rotate-x')) || 0) * Math.PI / 180;
+        const rotZ = (parseFloat(style.getPropertyValue('--iso-rotate-z')) || 0) * Math.PI / 180;
+        const isoScale = parseFloat(style.getPropertyValue('--iso-scale')) || 1;
 
-        // Grid has 6 columns, 5 rows, gaps, padding, and border
+        // Grid layout constants
         const gridPadding = 10;
         const gridBorder = 3;
         const gap = Math.max(2, Math.min(6, availableWidth * 0.005));
 
-        // Calculate cell size to fit
+        // First pass: max cell size from available space (ignoring transform)
         const cellFromWidth = (availableWidth - gridPadding * 2 - gridBorder * 2 - gap * 5) / 6;
-        const cellFromHeight = (adjustedHeight - gridPadding * 2 - gridBorder * 2 - gap * 4) / 5;
-        
-        const cellSize = Math.floor(Math.min(cellFromWidth, cellFromHeight));
-        
-        // Set CSS variable
+        const cellFromHeight = (availableHeight - gridPadding * 2 - gridBorder * 2 - gap * 4) / 5;
+        let cellSize = Math.floor(Math.min(cellFromWidth, cellFromHeight));
+
+        // Calculate pre-transform grid dimensions at this cell size
+        const gridW = cellSize * 6 + gap * 5 + gridPadding * 2 + gridBorder * 2;
+        const gridH = cellSize * 5 + gap * 4 + gridPadding * 2 + gridBorder * 2;
+
+        // Post-transform bounding box:
+        // rotateX compresses height, then rotateZ rotates the result
+        const compressedH = gridH * Math.cos(rotX);
+        const apparentW = (gridW * Math.abs(Math.cos(rotZ)) + compressedH * Math.abs(Math.sin(rotZ))) * isoScale;
+        const apparentH = (gridW * Math.abs(Math.sin(rotZ)) + compressedH * Math.abs(Math.cos(rotZ))) * isoScale;
+
+        // Scale down cell size if transformed board exceeds available space
+        const fitRatio = Math.min(availableWidth / apparentW, availableHeight / apparentH, 1);
+        if (fitRatio < 1) {
+            cellSize = Math.floor(cellSize * fitRatio);
+        }
+
+        // Set CSS variables
         document.documentElement.style.setProperty('--cell-size', cellSize + 'px');
         document.documentElement.style.setProperty('--grid-gap', gap + 'px');
-        
+
         // Update cached dimensions
         this.cellSize = cellSize;
         this.gridGap = gap;
-        
-        // Update nosher position if game is active
+
+        // Update nosher position if game is active (also refreshes counter-rotation)
         if (typeof Game !== 'undefined' && Game.nosher) {
             const pos = Game.nosher.getPosition();
             this.updateNosherPosition(pos.x, pos.y);
@@ -322,12 +333,16 @@ const Grid = {
             newCell.classList.add('nosher-cell');
         }
 
-        // Move the sprite with CSS transform
+        // Move the sprite with CSS transform, counter-rotating to stay upright
         if (this.nosherSprite) {
             const pixelPos = this.getPixelPosition(x, y);
-            const transform = `translate(${pixelPos.x}px, ${pixelPos.y}px)`;
+            // Read isometric angles for counter-rotation (billboard sprite)
+            const style = getComputedStyle(document.documentElement);
+            const rx = parseFloat(style.getPropertyValue('--iso-rotate-x')) || 0;
+            const rz = parseFloat(style.getPropertyValue('--iso-rotate-z')) || 0;
+            const transform = `translate(${pixelPos.x}px, ${pixelPos.y}px) rotateZ(${-rz}deg) rotateX(${-rx}deg)`;
             this.nosherSprite.style.transform = transform;
-            // Store current transform for animations
+            // Store current transform for animations (bounce composites on top)
             this.nosherSprite.style.setProperty('--current-transform', transform);
 
             // Add transparency when over an unnoshed cell (has a number visible)

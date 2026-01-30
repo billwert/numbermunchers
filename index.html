@@ -255,19 +255,19 @@
             <button id="dev-panel-close" class="dev-close-btn">&times;</button>
         </div>
         <div class="dev-panel-body">
-            <label>
+            <label title="Camera distance from the board. Lower = more dramatic 3D depth, higher = flatter.">
                 <span class="dev-label">Perspective: <span id="dev-perspective-val">800</span>px</span>
                 <input type="range" id="dev-perspective" min="200" max="2000" value="800" step="50">
             </label>
-            <label>
+            <label title="Tilts the board toward/away from you. 0 = flat (top-down), 80 = nearly edge-on.">
                 <span class="dev-label">Rotate X: <span id="dev-rotate-x-val">55</span>&deg;</span>
                 <input type="range" id="dev-rotate-x" min="0" max="80" value="55" step="1">
             </label>
-            <label>
+            <label title="Spins the board clockwise/counter-clockwise in the plane.">
                 <span class="dev-label">Rotate Z: <span id="dev-rotate-z-val">0</span>&deg;</span>
                 <input type="range" id="dev-rotate-z" min="-45" max="45" value="0" step="1">
             </label>
-            <label>
+            <label title="Zoom the board up or down. The board auto-fits to the viewport, so this is an additional multiplier.">
                 <span class="dev-label">Scale: <span id="dev-scale-val">1.0</span></span>
                 <input type="range" id="dev-scale" min="0.5" max="2.0" value="1.0" step="0.05">
             </label>

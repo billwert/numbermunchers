@@ -782,8 +782,9 @@ const Main = {
             const unit = units[key];
             document.documentElement.style.setProperty(cssVars[key], value + unit);
             labels[key].textContent = value;
-            // Rescale grid when rotateX changes (affects visible height)
-            if (key === 'rotateX' && typeof Grid !== 'undefined') {
+            // Rescale/refit grid on any transform change
+            // (viewport containment + nosher counter-rotation refresh)
+            if (typeof Grid !== 'undefined') {
                 Grid.scaleToViewport();
             }
         };
