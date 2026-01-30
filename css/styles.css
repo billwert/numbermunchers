@@ -755,11 +755,16 @@ body {
                rotateX(calc(-1 * var(--iso-rotate-x)))
                skewX(calc(var(--iso-rotate-z) * 0.3))
                translateZ(20px);
-    /* Pivot at bottom edge so number "stands on" the cell, not through it */
-    transform-origin: center bottom;
+    /* 2D mode: center origin */
+    transform-origin: center center;
     animation: wiggle 2s ease-in-out infinite;
     animation-delay: calc(var(--wiggle-delay) * 0.1s);
     z-index: 50;
+}
+
+/* 3D mode: bottom of number aligns with cell center */
+.iso-3d-mode .grid-cell .number {
+    transform-origin: center bottom;
 }
 
 @keyframes wiggle {
@@ -794,7 +799,12 @@ body {
     transition: transform 0.12s ease-out;
     /* Start position will be set by JS */
     transform: translate(0, 0);
-    /* Pivot at bottom so sprite "stands on" cell, not through it */
+    /* 2D mode: center origin (sprite centers on cell) */
+    transform-origin: center center;
+}
+
+/* 3D mode: bottom of sprite aligns with cell center */
+.nosher-sprite.iso-3d-mode {
     transform-origin: center bottom;
 }
 
@@ -937,9 +947,14 @@ body {
     font-size: calc(var(--cell-size) * 0.6);
     line-height: 1;
     z-index: 15;
-    /* Pivot at bottom so troggle "stands on" the cell */
-    transform-origin: center bottom;
+    /* 2D mode: center origin */
+    transform-origin: center center;
     animation: troggle-wobble 0.3s ease-in-out infinite;
+}
+
+/* 3D mode: bottom of troggle aligns with cell center */
+.iso-3d-mode .grid-cell.has-troggle::before {
+    transform-origin: center bottom;
 }
 
 /* Fallback if no emoji attribute */

@@ -97,11 +97,20 @@ const Grid = {
             effectiveScale = maxScale;
         }
 
+        // Determine 2D vs 3D mode based on rotation angles
+        const rotXDeg = rotX * 180 / Math.PI;
+        const rotZDeg = rotZ * 180 / Math.PI;
+        const is3DMode = rotXDeg !== 0 || rotZDeg !== 0;
+
         // Set CSS variables
         document.documentElement.style.setProperty('--cell-size', baseCellSize + 'px');
         document.documentElement.style.setProperty('--grid-gap', gap + 'px');
         // Apply the effective (possibly capped) scale via a separate CSS variable
         document.documentElement.style.setProperty('--iso-effective-scale', effectiveScale);
+        // Set 3D mode indicator for CSS (1 = 3D mode, 0 = 2D mode)
+        document.documentElement.style.setProperty('--iso-3d-mode', is3DMode ? '1' : '0');
+        // Toggle class on grid for CSS-based 3D mode detection
+        this.element.classList.toggle('iso-3d-mode', is3DMode);
 
         // Update cached dimensions
         this.cellSize = baseCellSize;
@@ -349,19 +358,21 @@ const Grid = {
             const rx = parseFloat(style.getPropertyValue('--iso-rotate-x')) || 0;
             const rz = parseFloat(style.getPropertyValue('--iso-rotate-z')) || 0;
             
-            // Calculate offset to keep sprite at visual "bottom" of cell as Z rotates
-            // When the board rotates through Z, the visual bottom shifts.
-            // We offset the sprite in the pre-transform space to compensate.
-            const rzRad = rz * Math.PI / 180;
+            // 2D/3D mode: In 3D mode (any rotation), pin bottom of sprite to cell center
+            // In 2D mode (no rotation), center sprite on cell center
+            const is3DMode = rx !== 0 || rz !== 0;
             const halfCell = this.cellSize / 2;
-            // Offset moves sprite toward the new visual "down" direction
-            const offsetX = Math.sin(rzRad) * halfCell * 0.15;
-            const offsetY = (1 - Math.cos(rzRad)) * halfCell * 0.15;
             
-            const transform = `translate(${pixelPos.x + offsetX}px, ${pixelPos.y + offsetY}px) rotateZ(${-rz}deg) rotateX(${-rx}deg)`;
+            // In 3D mode, shift sprite up by half its height so bottom aligns with cell center
+            const yOffset = is3DMode ? -halfCell : 0;
+            
+            const transform = `translate(${pixelPos.x}px, ${pixelPos.y + yOffset}px) rotateZ(${-rz}deg) rotateX(${-rx}deg)`;
             this.nosherSprite.style.transform = transform;
             // Store current transform for animations (bounce composites on top)
             this.nosherSprite.style.setProperty('--current-transform', transform);
+            
+            // Toggle 3D mode class for CSS adjustments
+            this.nosherSprite.classList.toggle('iso-3d-mode', is3DMode);
 
             // Add transparency when over an unnoshed cell (has a number visible)
             const currentCell = this.getCell(x, y);
