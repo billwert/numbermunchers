@@ -75,8 +75,12 @@ const Grid = {
         const cellFromHeight = (availableHeight - gridPadding * 2 - gridBorder * 2 - gap * 4) / 5;
         let cellSize = Math.floor(Math.min(cellFromWidth, cellFromHeight));
 
+        // Set header width from pre-fit cell size (independent of isometric shrinking)
+        const headerWidth = cellSize * 6 + gap * 5 + gridPadding * 2 + gridBorder * 2;
+        document.documentElement.style.setProperty('--header-width', headerWidth + 'px');
+
         // Calculate pre-transform grid dimensions at this cell size
-        const gridW = cellSize * 6 + gap * 5 + gridPadding * 2 + gridBorder * 2;
+        const gridW = headerWidth; // same formula
         const gridH = cellSize * 5 + gap * 4 + gridPadding * 2 + gridBorder * 2;
 
         // Post-transform bounding box:
@@ -91,7 +95,7 @@ const Grid = {
             cellSize = Math.floor(cellSize * fitRatio);
         }
 
-        // Set CSS variables
+        // Set CSS variables (cell-size may be smaller than pre-fit; header-width stays)
         document.documentElement.style.setProperty('--cell-size', cellSize + 'px');
         document.documentElement.style.setProperty('--grid-gap', gap + 'px');
 

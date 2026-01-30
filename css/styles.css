@@ -581,7 +581,7 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    /* No justify-content: center -- header pins to top, grid floats below */
     gap: clamp(8px, 1.5vh, 15px);
     max-width: 100%;
     height: 100%;
@@ -592,8 +592,10 @@ body {
 .game-header {
     position: relative;
     width: 100%;
-    max-width: calc(6 * var(--cell-size) + 5 * var(--grid-gap) + 26px);
+    /* Width set by JS from pre-fit cell size, independent of isometric shrinking */
+    max-width: var(--header-width, calc(6 * var(--cell-size) + 5 * var(--grid-gap) + 26px));
     text-align: center;
+    flex-shrink: 0;
 }
 
 .game-rule {
@@ -681,6 +683,9 @@ body {
     transform-style: preserve-3d;
     transform: rotateX(var(--iso-rotate-x)) rotateZ(var(--iso-rotate-z)) scale(var(--iso-scale));
     transform-origin: center center;
+    /* Center in remaining vertical space below the header */
+    margin-top: auto;
+    margin-bottom: auto;
 }
 
 .game-grid {
@@ -747,6 +752,8 @@ body {
                rotateZ(calc(-1 * var(--iso-rotate-z)))
                rotateX(calc(-1 * var(--iso-rotate-x)))
                skewX(calc(var(--iso-rotate-z) * 0.3));
+    /* Pivot at bottom edge so number "stands on" the cell, not through it */
+    transform-origin: center bottom;
     animation: wiggle 2s ease-in-out infinite;
     animation-delay: calc(var(--wiggle-delay) * 0.1s);
     z-index: 20;
@@ -784,6 +791,8 @@ body {
     transition: transform 0.12s ease-out;
     /* Start position will be set by JS */
     transform: translate(0, 0);
+    /* Pivot at bottom so sprite "stands on" cell, not through it */
+    transform-origin: center bottom;
 }
 
 .nosher-body {
@@ -925,6 +934,8 @@ body {
     font-size: calc(var(--cell-size) * 0.6);
     line-height: 1;
     z-index: 15;
+    /* Pivot at bottom so troggle "stands on" the cell */
+    transform-origin: center bottom;
     animation: troggle-wobble 0.3s ease-in-out infinite;
 }
 
