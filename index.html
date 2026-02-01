@@ -155,7 +155,7 @@
     <!-- Game Screen -->
     <div id="game-screen" class="screen">
         <div class="game-container">
-            <!-- Game Header -->
+            <!-- Game Header - pinned to top, never transforms -->
             <div class="game-header">
                 <div class="game-rule">
                     <span class="rule-label">Find:</span>
@@ -178,17 +178,19 @@
                 <button id="pause-btn" class="pause-btn" data-action="pause">⏸️</button>
             </div>
 
-            <!-- Game Grid -->
-            <div class="grid-wrapper">
-                <div id="game-grid" class="game-grid">
-                    <!-- 6x5 grid cells populated by JS -->
-                </div>
-                <!-- Nosher Sprite (animated separately for smooth movement) -->
-                <div id="nosher-sprite" class="nosher-sprite">
-                    <div class="nosher-body">
-                        <div class="nosher-eye left"></div>
-                        <div class="nosher-eye right"></div>
-                        <div class="nosher-mouth"></div>
+            <!-- Game Area - fills remaining space, contains the transformed grid -->
+            <div class="game-area">
+                <div class="grid-wrapper">
+                    <div id="game-grid" class="game-grid">
+                        <!-- 6x5 grid cells populated by JS -->
+                    </div>
+                    <!-- Nosher Sprite (animated separately for smooth movement) -->
+                    <div id="nosher-sprite" class="nosher-sprite">
+                        <div class="nosher-body">
+                            <div class="nosher-eye left"></div>
+                            <div class="nosher-eye right"></div>
+                            <div class="nosher-mouth"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -251,31 +253,38 @@
     <!-- Dev Mode: Isometric Controls (Ctrl+Shift+D or ?dev=1) -->
     <div id="dev-panel" class="dev-panel hidden">
         <div class="dev-panel-header">
-            <span>Isometric Controls</span>
+            <span>Isometric Presets</span>
             <button id="dev-panel-close" class="dev-close-btn">&times;</button>
         </div>
         <div class="dev-panel-body">
-            <label title="Camera distance from the board. Lower = more dramatic 3D depth, higher = flatter.">
-                <span class="dev-label">Perspective: <span id="dev-perspective-val">800</span>px</span>
-                <input type="range" id="dev-perspective" min="200" max="4000" value="800" step="50">
-            </label>
-            <label title="Tilts the board toward/away from you. 0 = flat (top-down), 80 = nearly edge-on.">
-                <span class="dev-label">Rotate X: <span id="dev-rotate-x-val">55</span>&deg;</span>
-                <input type="range" id="dev-rotate-x" min="0" max="80" value="55" step="1">
-            </label>
-            <label title="Spins the board clockwise/counter-clockwise in the plane.">
-                <span class="dev-label">Rotate Z: <span id="dev-rotate-z-val">0</span>&deg;</span>
-                <input type="range" id="dev-rotate-z" min="-45" max="45" value="0" step="1">
-            </label>
-            <label title="Zoom the board up or down. The board auto-fits to the viewport, so this is an additional multiplier.">
-                <span class="dev-label">Scale: <span id="dev-scale-val">1.0</span></span>
-                <input type="range" id="dev-scale" min="0.5" max="2.0" value="1.0" step="0.05">
-            </label>
-            <div class="dev-buttons">
-                <button id="dev-reset" class="dev-btn">Reset</button>
-                <button id="dev-copy" class="dev-btn">Copy Values</button>
+            <div class="preset-buttons">
+                <button class="preset-btn" data-preset="1">1: Flat (2D)</button>
+                <button class="preset-btn" data-preset="2">2: Slight Tilt (30°)</button>
+                <button class="preset-btn" data-preset="3">3: Medium Tilt (45°)</button>
+                <button class="preset-btn selected" data-preset="4">4: Classic Iso (55°)</button>
+                <button class="preset-btn" data-preset="5">5: Diamond (55°/45°)</button>
+            </div>
+            <hr style="border-color: var(--color-cell-border); margin: 10px 0;">
+            <div class="dev-manual-controls">
+                <label class="dev-checkbox">
+                    <input type="checkbox" id="dev-manual-mode">
+                    <span>Manual Resize Mode</span>
+                </label>
+                <p class="dev-hint">Drag corner handles to resize grid</p>
+                <button id="dev-copy-values" class="dev-btn">Copy Values</button>
+            </div>
+            <div class="dev-info" id="dev-info">
+                Preset 4: rotateX=55°, rotateZ=0°
             </div>
         </div>
+    </div>
+
+    <!-- Resize handles (shown in manual mode) -->
+    <div id="resize-handles" class="resize-handles hidden">
+        <div class="resize-handle" data-corner="nw"></div>
+        <div class="resize-handle" data-corner="ne"></div>
+        <div class="resize-handle" data-corner="se"></div>
+        <div class="resize-handle" data-corner="sw"></div>
     </div>
 
     <!-- Scripts -->

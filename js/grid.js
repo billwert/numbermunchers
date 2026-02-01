@@ -43,80 +43,168 @@ const Grid = {
     },
 
     // Scale the grid to fill the viewport
+    // 
+    // KEY INSIGHT: CSS perspective distorts the grid - points closer to the viewer
+    // appear larger. We must project corners through perspective to find the TRUE
+    // visual bounding box and center.
+    //
     scaleToViewport() {
         const gameScreen = document.getElementById('game-screen');
         if (!gameScreen.classList.contains('active')) return;
 
-        const header = document.querySelector('.game-header');
+        const gameArea = document.querySelector('.game-area');
+        if (!gameArea) return;
 
-        // Get available space
-        const viewportWidth = window.innerWidth;
-        const viewportHeight = window.innerHeight;
+        const availableWidth = gameArea.clientWidth;
+        const availableHeight = gameArea.clientHeight;
         const padding = 20;
 
-        const headerHeight = header ? header.offsetHeight + 15 : 0;
-
-        const availableWidth = viewportWidth - padding * 2;
-        const availableHeight = viewportHeight - headerHeight - padding * 2;
-
-        // Read isometric transform parameters
+        // Read current preset and perspective
         const style = getComputedStyle(document.documentElement);
-        const rotX = (parseFloat(style.getPropertyValue('--iso-rotate-x')) || 0) * Math.PI / 180;
-        const rotZ = (parseFloat(style.getPropertyValue('--iso-rotate-z')) || 0) * Math.PI / 180;
+        const preset = parseInt(style.getPropertyValue('--iso-preset')) || 4;
+        const perspective = parseFloat(style.getPropertyValue('--iso-perspective')) || 800;
         const isoScale = parseFloat(style.getPropertyValue('--iso-scale')) || 1;
+
+        // Presets: [rotateX, rotateZ, name]
+        const presets = [
+            [0, 0, 'Flat (2D)'],
+            [30, 0, 'Slight Tilt'],
+            [45, 0, 'Medium Tilt'],
+            [55, 0, 'Classic Iso'],
+            [55, 45, 'Diamond'],
+        ];
+
+        const [rotXDeg, rotZDeg, presetName] = presets[preset - 1] || presets[3];
+        const rotX = rotXDeg * Math.PI / 180;
+        const rotZ = rotZDeg * Math.PI / 180;
 
         // Grid layout constants
         const gridPadding = 10;
         const gridBorder = 3;
         const gap = Math.max(2, Math.min(6, availableWidth * 0.005));
+        const fixedOverhead = gridPadding * 2 + gridBorder * 2;
+        const gapW = 5 * gap + fixedOverhead;
+        const gapH = 4 * gap + fixedOverhead;
 
-        // Calculate base cell size from available space (without transforms)
-        const cellFromWidth = (availableWidth - gridPadding * 2 - gridBorder * 2 - gap * 5) / 6;
-        const cellFromHeight = (availableHeight - gridPadding * 2 - gridBorder * 2 - gap * 4) / 5;
-        let baseCellSize = Math.floor(Math.min(cellFromWidth, cellFromHeight));
+        const cosX = Math.cos(rotX);
+        const sinX = Math.sin(rotX);
+        const cosZ = Math.cos(rotZ);
+        const sinZ = Math.sin(rotZ);
 
-        // Pre-transform grid dimensions
-        const gridW = baseCellSize * 6 + gap * 5 + gridPadding * 2 + gridBorder * 2;
-        const gridH = baseCellSize * 5 + gap * 4 + gridPadding * 2 + gridBorder * 2;
-
-        // Calculate post-transform bounding box
-        // rotateX compresses height, then rotateZ rotates the result
-        const compressedH = gridH * Math.cos(rotX);
-        const transformedW = (gridW * Math.abs(Math.cos(rotZ)) + compressedH * Math.abs(Math.sin(rotZ))) * isoScale;
-        const transformedH = (gridW * Math.abs(Math.sin(rotZ)) + compressedH * Math.abs(Math.cos(rotZ))) * isoScale;
-
-        // Calculate effective scale that keeps the board in bounds
-        // Start with the user's requested scale, then cap if it would overflow
-        let effectiveScale = isoScale;
-        const maxScaleW = availableWidth / (gridW * Math.abs(Math.cos(rotZ)) + compressedH * Math.abs(Math.sin(rotZ)));
-        const maxScaleH = availableHeight / (gridW * Math.abs(Math.sin(rotZ)) + compressedH * Math.abs(Math.cos(rotZ)));
-        const maxScale = Math.min(maxScaleW, maxScaleH);
-        
-        // Cap the effective scale if needed
-        if (effectiveScale > maxScale) {
-            effectiveScale = maxScale;
-        }
-
-        // Determine 2D vs 3D mode based on rotation angles
-        const rotXDeg = rotX * 180 / Math.PI;
-        const rotZDeg = rotZ * 180 / Math.PI;
         const is3DMode = rotXDeg !== 0 || rotZDeg !== 0;
 
+        // Transform a point through rotateX, rotateZ, then perspective projection
+        // Input: (x, y) in grid plane (z=0), relative to grid center
+        // Output: (screenX, screenY) after perspective projection
+        const projectPoint = (x, y) => {
+            // After rotateX(rx): the point rotates around X axis
+            // y' = y * cos(rx), z' = y * sin(rx)
+            // (top of grid goes back into screen, bottom comes forward)
+            const y1 = y * cosX;
+            const z1 = y * sinX;  // positive = closer to viewer
+
+            // After rotateZ(rz): rotate around Z axis in XY plane
+            const x2 = x * cosZ - y1 * sinZ;
+            const y2 = x * sinZ + y1 * cosZ;
+            const z2 = z1;  // Z unchanged by rotateZ
+
+            // Perspective projection: scale = P / (P - z)
+            // Points with positive z (closer) get scale > 1 (appear larger)
+            const scale = perspective / (perspective - z2);
+            
+            return {
+                x: x2 * scale,
+                y: y2 * scale,
+                z: z2,
+                scale: scale
+            };
+        };
+
+        // Calculate visual bounding box for a given cell size
+        // Returns the bounding box in screen space AFTER perspective projection
+        const computeProjectedBoundingBox = (cellSize) => {
+            const gridW = 6 * cellSize + gapW;
+            const gridH = 5 * cellSize + gapH;
+            const halfW = gridW / 2;
+            const halfH = gridH / 2;
+
+            // Four corners of grid in grid-plane coordinates (before any transform)
+            const corners = [
+                { x: -halfW, y: -halfH },  // top-left
+                { x:  halfW, y: -halfH },  // top-right
+                { x:  halfW, y:  halfH },  // bottom-right
+                { x: -halfW, y:  halfH },  // bottom-left
+            ];
+
+            // Project each corner through the full transform chain
+            const projected = corners.map(c => projectPoint(c.x, c.y));
+
+            // Find bounding box of projected points
+            const xs = projected.map(p => p.x);
+            const ys = projected.map(p => p.y);
+            const minX = Math.min(...xs);
+            const maxX = Math.max(...xs);
+            const minY = Math.min(...ys);
+            const maxY = Math.max(...ys);
+
+            return {
+                width: maxX - minX,
+                height: maxY - minY,
+                // Visual center (center of projected bounding box) relative to grid center
+                centerX: (minX + maxX) / 2,
+                centerY: (minY + maxY) / 2,
+                // For debugging
+                corners: projected
+            };
+        };
+
+        // Binary search for largest cell size that fits
+        const targetW = (availableWidth - padding * 2) / isoScale;
+        const targetH = (availableHeight - padding * 2) / isoScale;
+
+        let lo = 30, hi = 300;
+        while (hi - lo > 1) {
+            const mid = Math.floor((lo + hi) / 2);
+            const bb = computeProjectedBoundingBox(mid);
+            if (bb.width <= targetW && bb.height <= targetH) {
+                lo = mid;
+            } else {
+                hi = mid;
+            }
+        }
+        const cellSize = lo;
+
+        // Compute final bounding box
+        const bb = computeProjectedBoundingBox(cellSize);
+
+        // The visual center (after perspective) is offset from grid center.
+        // To center the visual, we offset the grid position by the negative of this.
+        // These offsets are in screen space, so we apply them via CSS left/top.
+        const offsetX = -bb.centerX * isoScale;
+        const offsetY = -bb.centerY * isoScale;
+
         // Set CSS variables
-        document.documentElement.style.setProperty('--cell-size', baseCellSize + 'px');
+        document.documentElement.style.setProperty('--cell-size', cellSize + 'px');
         document.documentElement.style.setProperty('--grid-gap', gap + 'px');
-        // Apply the effective (possibly capped) scale via a separate CSS variable
-        document.documentElement.style.setProperty('--iso-effective-scale', effectiveScale);
-        // Set 3D mode indicator for CSS (1 = 3D mode, 0 = 2D mode)
+        document.documentElement.style.setProperty('--iso-rotate-x', rotXDeg + 'deg');
+        document.documentElement.style.setProperty('--iso-rotate-z', rotZDeg + 'deg');
+        document.documentElement.style.setProperty('--iso-effective-scale', isoScale);
+        document.documentElement.style.setProperty('--iso-offset-x', offsetX + 'px');
+        document.documentElement.style.setProperty('--iso-offset-y', offsetY + 'px');
         document.documentElement.style.setProperty('--iso-3d-mode', is3DMode ? '1' : '0');
-        // Toggle class on grid for CSS-based 3D mode detection
         this.element.classList.toggle('iso-3d-mode', is3DMode);
 
-        // Update cached dimensions
-        this.cellSize = baseCellSize;
+        console.log('scaleToViewport:', {
+            preset, presetName, rotXDeg, rotZDeg, perspective,
+            availableWidth, availableHeight,
+            cellSize,
+            projectedBB: { width: bb.width, height: bb.height, centerX: bb.centerX, centerY: bb.centerY },
+            offset: { x: offsetX, y: offsetY }
+        });
+
+        this.cellSize = cellSize;
         this.gridGap = gap;
 
-        // Update nosher position if game is active (also refreshes counter-rotation)
         if (typeof Game !== 'undefined' && Game.nosher) {
             const pos = Game.nosher.getPosition();
             this.updateNosherPosition(pos.x, pos.y);

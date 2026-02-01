@@ -580,22 +580,26 @@ body {
 .game-container {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    /* No justify-content: center -- header pins to top, grid floats below */
-    gap: clamp(8px, 1.5vh, 15px);
-    max-width: 100%;
+    width: 100%;
     height: 100%;
-    padding: 10px;
-    perspective: var(--iso-perspective);
 }
 
 .game-header {
-    position: relative;
-    width: 100%;
-    /* Fixed width based on viewport, completely independent of isometric transforms */
-    max-width: min(95vw, 600px);
-    text-align: center;
     flex-shrink: 0;
+    width: 100%;
+    max-width: min(95vw, 600px);
+    margin: 0 auto;
+    padding: 10px;
+    text-align: center;
+}
+
+/* Game Area - fills all remaining space below header */
+.game-area {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    /* perspective applied here so grid transforms relative to this container */
+    perspective: var(--iso-perspective);
 }
 
 .game-rule {
@@ -677,16 +681,14 @@ body {
 /* =========================================
    GAME GRID
    ========================================= */
+/* Grid wrapper - centered in game-area with perspective-corrected offsets */
 .grid-wrapper {
-    position: relative;
-    display: inline-block;
+    position: absolute;
+    left: calc(50% + var(--iso-offset-x, 0px));
+    top: calc(50% + var(--iso-offset-y, 0px));
     transform-style: preserve-3d;
-    /* Use effective scale which may be capped to prevent overflow */
-    transform: rotateX(var(--iso-rotate-x)) rotateZ(var(--iso-rotate-z)) scale(var(--iso-effective-scale, var(--iso-scale)));
+    transform: translate(-50%, -50%) rotateX(var(--iso-rotate-x)) rotateZ(var(--iso-rotate-z)) scale(var(--iso-effective-scale, var(--iso-scale)));
     transform-origin: center center;
-    /* Center in remaining vertical space below the header */
-    margin-top: auto;
-    margin-bottom: auto;
 }
 
 .game-grid {
@@ -1531,3 +1533,108 @@ body {
 .dev-btn:hover {
     background: var(--color-cell-hover);
 }
+
+/* Preset buttons */
+.preset-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.preset-btn {
+    padding: 10px 12px;
+    font-size: 0.85rem;
+    font-weight: bold;
+    border: 2px solid var(--color-cell-border);
+    border-radius: 8px;
+    background: var(--color-cell-bg);
+    color: var(--color-text);
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: left;
+}
+
+.preset-btn:hover {
+    background: var(--color-cell-hover);
+    border-color: var(--color-primary);
+}
+
+.preset-btn.selected {
+    background: var(--color-primary);
+    border-color: var(--color-primary-dark);
+}
+
+.dev-info {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    text-align: center;
+    padding-top: 4px;
+}
+
+.dev-manual-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.dev-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.dev-checkbox input {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+.dev-hint {
+    font-size: 0.7rem;
+    color: var(--color-text-muted);
+    margin: 0;
+}
+
+/* Resize handles overlay */
+.resize-handles {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 10000;
+}
+
+.resize-handles.hidden {
+    display: none;
+}
+
+.resize-handle {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background: var(--color-primary);
+    border: 3px solid white;
+    border-radius: 50%;
+    pointer-events: all;
+    cursor: grab;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+    transition: transform 0.1s;
+}
+
+.resize-handle:hover {
+    transform: scale(1.3);
+    background: var(--color-secondary);
+}
+
+.resize-handle:active {
+    cursor: grabbing;
+    transform: scale(1.1);
+}
+
+.resize-handle[data-corner="nw"] { cursor: nw-resize; }
+.resize-handle[data-corner="ne"] { cursor: ne-resize; }
+.resize-handle[data-corner="se"] { cursor: se-resize; }
+.resize-handle[data-corner="sw"] { cursor: sw-resize; }
