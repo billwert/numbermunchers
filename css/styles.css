@@ -41,6 +41,12 @@
     --grid-gap: 4px;
     --border-radius: 12px;
 
+    /* Isometric view */
+    --iso-perspective: 800px;
+    --iso-rotate-x: 0deg;
+    --iso-rotate-z: 0deg;
+    --iso-scale: 1.0;
+
     /* Fonts - use system fonts that work across platforms */
     --font-main: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     --font-display: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -660,22 +666,30 @@ body {
 .game-container {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: clamp(8px, 1.5vh, 15px);
-    max-width: 100%;
+    width: 100%;
     height: 100%;
-    padding: 10px;
 }
 
 .game-header {
-    position: relative;
+    flex-shrink: 0;
     width: 100%;
-    max-width: calc(6 * var(--cell-size) + 5 * var(--grid-gap) + 26px);
+    max-width: min(95vw, 600px);
+    margin: 0 auto;
+    padding: 10px;
     text-align: center;
 }
 
+/* Game Area - fills all remaining space below header */
+.game-area {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    /* perspective applied here so grid transforms relative to this container */
+    perspective: var(--iso-perspective);
+}
+
 .game-rule {
+    position: relative;
     background: linear-gradient(145deg, var(--color-secondary), #E65100);
     padding: clamp(8px, 1.5vh, 15px) clamp(15px, 3vw, 25px);
     border-radius: var(--border-radius);
@@ -726,16 +740,16 @@ body {
     letter-spacing: 2px;
 }
 
-/* Pause Button */
+/* Header Buttons (inside .game-rule orange box) */
+.view-toggle-btn,
 .pause-btn {
     position: absolute;
-    top: 10px;
-    right: 10px;
-    width: 44px;
-    height: 44px;
-    font-size: 1.5rem;
-    background: var(--color-cell-bg);
-    border: 2px solid var(--color-cell-border);
+    top: 50%;
+    transform: translateY(-50%);
+    width: 36px;
+    height: 36px;
+    background: rgba(0, 0, 0, 0.25);
+    border: 2px solid rgba(255, 255, 255, 0.3);
     border-radius: var(--border-radius);
     color: var(--color-text);
     cursor: pointer;
@@ -745,18 +759,37 @@ body {
     justify-content: center;
 }
 
+.view-toggle-btn {
+    right: 46px;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.pause-btn {
+    right: 6px;
+    font-size: 1.2rem;
+}
+
+.view-toggle-btn:hover,
+.view-toggle-btn:active,
 .pause-btn:hover,
 .pause-btn:active {
-    background: var(--color-primary);
-    transform: scale(1.05);
+    background: rgba(0, 0, 0, 0.4);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: translateY(-50%) scale(1.05);
 }
 
 /* =========================================
    GAME GRID
    ========================================= */
+/* Grid wrapper - centered in game-area with perspective-corrected offsets */
 .grid-wrapper {
-    position: relative;
-    display: inline-block;
+    position: absolute;
+    left: calc(50% + var(--iso-offset-x, 0px));
+    top: calc(50% + var(--iso-offset-y, 0px));
+    transform-style: preserve-3d;
+    transform: translate(-50%, -50%) rotateX(var(--iso-rotate-x)) rotateZ(var(--iso-rotate-z)) scale(var(--iso-effective-scale, var(--iso-scale)));
+    transform-origin: center center;
 }
 
 .game-grid {
@@ -770,6 +803,24 @@ body {
     border: 3px solid var(--color-cell-border);
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3),
                 inset 0 0 20px rgba(0, 0, 0, 0.2);
+    /* Depth effect: the grid board has thickness */
+    transform-style: preserve-3d;
+}
+
+/* Board thickness / side face visible when tilted */
+.game-grid::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 12px;
+    background: linear-gradient(to bottom, var(--color-bg-light), #0d1425);
+    border-radius: 0 0 var(--border-radius) var(--border-radius);
+    border: 3px solid var(--color-cell-border);
+    border-top: none;
+    transform: rotateX(-90deg);
+    transform-origin: top center;
 }
 
 .grid-cell {
@@ -786,6 +837,8 @@ body {
     position: relative;
     -webkit-user-select: none;
     -webkit-touch-callout: none;
+    /* 3D context so child counter-rotations work in 3D space */
+    transform-style: preserve-3d;
 }
 
 .grid-cell:hover {
@@ -798,16 +851,29 @@ body {
     position: absolute;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%);
+    /* Counter-rotate to stay upright, with subtle skew for surface feel */
+    /* translateZ brings numbers forward in 3D space so they appear in front of sprites */
+    transform: translate(-50%, -50%)
+               rotateZ(calc(-1 * var(--iso-rotate-z)))
+               rotateX(calc(-1 * var(--iso-rotate-x)))
+               skewX(calc(var(--iso-rotate-z) * 0.3))
+               translateZ(20px);
+    /* 2D mode: center origin */
+    transform-origin: center center;
     animation: wiggle 2s ease-in-out infinite;
     animation-delay: calc(var(--wiggle-delay) * 0.1s);
-    z-index: 20;
+    z-index: 50;
+}
+
+/* 3D mode: bottom of number aligns with cell center */
+.iso-3d-mode .grid-cell .number {
+    transform-origin: center bottom;
 }
 
 @keyframes wiggle {
-    0%, 100% { transform: translate(-50%, -50%) rotate(0deg); }
-    25% { transform: translate(-50%, -50%) rotate(-3deg); }
-    75% { transform: translate(-50%, -50%) rotate(3deg); }
+    0%, 100% { transform: translate(-50%, -50%) rotateZ(calc(-1 * var(--iso-rotate-z))) rotateX(calc(-1 * var(--iso-rotate-x))) skewX(calc(var(--iso-rotate-z) * 0.3)) translateZ(20px) rotate(0deg); }
+    25% { transform: translate(-50%, -50%) rotateZ(calc(-1 * var(--iso-rotate-z))) rotateX(calc(-1 * var(--iso-rotate-x))) skewX(calc(var(--iso-rotate-z) * 0.3)) translateZ(20px) rotate(-3deg); }
+    75% { transform: translate(-50%, -50%) rotateZ(calc(-1 * var(--iso-rotate-z))) rotateX(calc(-1 * var(--iso-rotate-x))) skewX(calc(var(--iso-rotate-z) * 0.3)) translateZ(20px) rotate(3deg); }
 }
 
 .grid-cell.noshed {
@@ -841,6 +907,13 @@ body {
     transition: transform 0.12s ease-out;
     /* Start position will be set by JS */
     transform: translate(0, 0);
+    /* 2D mode: center origin (sprite centers on cell) */
+    transform-origin: center center;
+}
+
+/* 3D mode: bottom of sprite aligns with cell center */
+.nosher-sprite.iso-3d-mode {
+    transform-origin: center bottom;
 }
 
 .nosher-body {
@@ -971,7 +1044,7 @@ body {
     border-color: var(--color-cell-border);
 }
 
-/* Troggle emoji - scaled to cell size */
+/* Troggle emoji - scaled to cell size, counter-rotated to stay upright */
 .grid-cell.has-troggle::before {
     content: attr(data-troggle-emoji);
     position: absolute;
@@ -982,7 +1055,14 @@ body {
     font-size: calc(var(--cell-size) * 0.6);
     line-height: 1;
     z-index: 15;
+    /* 2D mode: center origin */
+    transform-origin: center center;
     animation: troggle-wobble 0.3s ease-in-out infinite;
+}
+
+/* 3D mode: bottom of troggle aligns with cell center */
+.iso-3d-mode .grid-cell.has-troggle::before {
+    transform-origin: center bottom;
 }
 
 /* Fallback if no emoji attribute */
@@ -1012,13 +1092,13 @@ body {
 }
 
 @keyframes troggle-wobble {
-    0%, 100% { transform: translateX(0); }
-    50% { transform: translateX(2px); }
+    0%, 100% { transform: rotateZ(calc(-1 * var(--iso-rotate-z))) rotateX(calc(-1 * var(--iso-rotate-x))) translateX(0); }
+    50% { transform: rotateZ(calc(-1 * var(--iso-rotate-z))) rotateX(calc(-1 * var(--iso-rotate-x))) translateX(2px); }
 }
 
 @keyframes troggle-pulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.02); }
+    0%, 100% { transform: rotateZ(calc(-1 * var(--iso-rotate-z))) rotateX(calc(-1 * var(--iso-rotate-x))) scale(1); }
+    50% { transform: rotateZ(calc(-1 * var(--iso-rotate-z))) rotateX(calc(-1 * var(--iso-rotate-x))) scale(1.02); }
 }
 
 /* Safety Squares - white corner brackets */
@@ -1433,3 +1513,187 @@ body {
     50% { transform: scale(0.95); }
     75% { transform: scale(1.05); }
 }
+
+/* =========================================
+   DEV MODE: ISOMETRIC CONTROLS PANEL
+   ========================================= */
+.dev-panel {
+    position: fixed;
+    bottom: 16px;
+    right: 16px;
+    width: 280px;
+    background: rgba(22, 33, 62, 0.95);
+    border: 2px solid var(--color-cell-border);
+    border-radius: var(--border-radius);
+    z-index: 9999;
+    font-family: var(--font-main);
+    color: var(--color-text);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(8px);
+}
+
+.dev-panel.hidden {
+    display: none;
+}
+
+.dev-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--color-cell-border);
+    font-weight: bold;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-secondary);
+}
+
+.dev-close-btn {
+    background: none;
+    border: none;
+    color: var(--color-text-muted);
+    font-size: 1.3rem;
+    cursor: pointer;
+    padding: 0 4px;
+    line-height: 1;
+}
+
+.dev-close-btn:hover {
+    color: var(--color-danger);
+}
+
+.dev-panel-body {
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.dev-panel-body label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.dev-btn {
+    flex: 1;
+    padding: 6px 10px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    border: 1px solid var(--color-cell-border);
+    border-radius: 6px;
+    background: var(--color-cell-bg);
+    color: var(--color-text);
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.dev-btn:hover {
+    background: var(--color-cell-hover);
+}
+
+/* Preset buttons */
+.preset-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.preset-btn {
+    padding: 10px 12px;
+    font-size: 0.85rem;
+    font-weight: bold;
+    border: 2px solid var(--color-cell-border);
+    border-radius: 8px;
+    background: var(--color-cell-bg);
+    color: var(--color-text);
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: left;
+}
+
+.preset-btn:hover {
+    background: var(--color-cell-hover);
+    border-color: var(--color-primary);
+}
+
+.preset-btn.selected {
+    background: var(--color-primary);
+    border-color: var(--color-primary-dark);
+}
+
+.dev-info {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    text-align: center;
+    padding-top: 4px;
+}
+
+.dev-manual-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.dev-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.dev-checkbox input {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+.dev-hint {
+    font-size: 0.7rem;
+    color: var(--color-text-muted);
+    margin: 0;
+}
+
+/* Resize handles overlay */
+.resize-handles {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 10000;
+}
+
+.resize-handles.hidden {
+    display: none;
+}
+
+.resize-handle {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background: var(--color-primary);
+    border: 3px solid white;
+    border-radius: 50%;
+    pointer-events: all;
+    cursor: grab;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+    transition: transform 0.1s;
+}
+
+.resize-handle:hover {
+    transform: scale(1.3);
+    background: var(--color-secondary);
+}
+
+.resize-handle:active {
+    cursor: grabbing;
+    transform: scale(1.1);
+}
+
+.resize-handle[data-corner="nw"] { cursor: nw-resize; }
+.resize-handle[data-corner="ne"] { cursor: ne-resize; }
+.resize-handle[data-corner="se"] { cursor: se-resize; }
+.resize-handle[data-corner="sw"] { cursor: sw-resize; }

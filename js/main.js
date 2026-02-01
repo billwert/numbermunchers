@@ -27,6 +27,9 @@ const Main = {
         // Set up resume overlay for background return
         this.setupResumeOverlay();
 
+        // Set up dev mode (Ctrl+Shift+D or ?dev=1)
+        this.setupDevMode();
+
         // Show splash screen
         this.showScreen('splash');
         this.setupSplashInput();
@@ -447,6 +450,14 @@ const Main = {
             });
         }
 
+        // View toggle button (2D/3D)
+        const viewToggleBtn = document.getElementById('view-toggle-btn');
+        if (viewToggleBtn) {
+            viewToggleBtn.addEventListener('click', () => {
+                this.toggleViewMode();
+            });
+        }
+
         // Menu option hover
         document.querySelectorAll('.menu-options .menu-btn').forEach((btn, i) => {
             btn.addEventListener('mouseenter', () => {
@@ -726,6 +737,29 @@ const Main = {
             Game.mouseAutopilot = settings.mouseAutopilot || false;
             Game.testingMode = settings.testingMode || false;
         }
+        // Apply saved view mode (2D or 3D)
+        this.applyViewMode(settings.viewMode || '2d');
+    },
+
+    // Toggle between 2D and 3D view modes
+    toggleViewMode() {
+        const current = Storage.getSettings().viewMode || '2d';
+        const next = current === '3d' ? '2d' : '3d';
+        Storage.saveSettings({ viewMode: next });
+        this.applyViewMode(next);
+        Grid.scaleToViewport();
+    },
+
+    // Apply view mode: set preset and update toggle button text
+    applyViewMode(mode) {
+        // Preset 1 = Flat (2D), Preset 3 = Medium Tilt (3D)
+        const preset = mode === '2d' ? 1 : 3;
+        document.documentElement.style.setProperty('--iso-preset', preset);
+        const btn = document.getElementById('view-toggle-btn');
+        if (btn) {
+            // Button shows what you'll switch TO
+            btn.textContent = mode === '3d' ? '2D' : '3D';
+        }
     },
 
     // Settings navigation state
@@ -829,6 +863,312 @@ const Main = {
         };
 
         Input.onAnyKey = null;
+    },
+
+    // =========================================
+    //  DEV MODE: Isometric preset picker + Manual resize
+    // =========================================
+    setupDevMode() {
+        const panel = document.getElementById('dev-panel');
+        if (!panel) return;
+
+        const presetInfo = {
+            1: 'Preset 1: rotateX=0°, rotateZ=0° (Flat)',
+            2: 'Preset 2: rotateX=30°, rotateZ=0° (Slight)',
+            3: 'Preset 3: rotateX=45°, rotateZ=0° (Medium)',
+            4: 'Preset 4: rotateX=55°, rotateZ=0° (Classic)',
+            5: 'Preset 5: rotateX=55°, rotateZ=45° (Diamond)'
+        };
+
+        let manualMode = false;
+
+        const selectPreset = (preset) => {
+            document.documentElement.style.setProperty('--iso-preset', preset);
+            
+            panel.querySelectorAll('.preset-btn').forEach(btn => {
+                btn.classList.toggle('selected', parseInt(btn.dataset.preset) === preset);
+            });
+            
+            document.getElementById('dev-info').textContent = presetInfo[preset];
+            
+            if (typeof Grid !== 'undefined') {
+                Grid.scaleToViewport();
+            }
+            
+            if (manualMode) {
+                setTimeout(updateHandlePositions, 50);
+            }
+        };
+
+        panel.querySelectorAll('.preset-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                selectPreset(parseInt(btn.dataset.preset));
+            });
+        });
+
+        const togglePanel = () => {
+            panel.classList.toggle('hidden');
+        };
+
+        document.getElementById('dev-panel-close').addEventListener('click', togglePanel);
+
+        // =========================================
+        // Manual Resize Mode - handles on GRID corners
+        // =========================================
+        const handlesContainer = document.getElementById('resize-handles');
+        const handles = handlesContainer.querySelectorAll('.resize-handle');
+        const manualCheckbox = document.getElementById('dev-manual-mode');
+        
+        // Get the screen positions of the 4 corners of the actual game-grid.
+        // Uses the same perspective projection math as scaleToViewport() in grid.js,
+        // anchored to game-area's screen rect + CSS offset variables.
+        // (Previous DOMMatrix approach double-counted the translate(-50%,-50%).)
+        const getGridCorners = () => {
+            const gameArea = document.querySelector('.game-area');
+            if (!gameArea) return null;
+
+            const areaRect = gameArea.getBoundingClientRect();
+            const style = getComputedStyle(document.documentElement);
+
+            // Grid dimensions (must match grid.js layout constants)
+            const cellSize = Grid.cellSize || 100;
+            const gap = Grid.gridGap || 4;
+            const gridW = 6 * cellSize + 5 * gap + 26; // 20 padding + 6 border
+            const gridH = 5 * cellSize + 4 * gap + 24; // 20 padding + 6 border
+            const halfW = gridW / 2;
+            const halfH = gridH / 2;
+
+            // Read the same transform params scaleToViewport() sets
+            const rotXDeg = parseFloat(style.getPropertyValue('--iso-rotate-x')) || 0;
+            const rotZDeg = parseFloat(style.getPropertyValue('--iso-rotate-z')) || 0;
+            const scale = parseFloat(style.getPropertyValue('--iso-effective-scale')) || 1;
+            const perspective = parseFloat(style.getPropertyValue('--iso-perspective')) || 800;
+            const offsetX = parseFloat(style.getPropertyValue('--iso-offset-x')) || 0;
+            const offsetY = parseFloat(style.getPropertyValue('--iso-offset-y')) || 0;
+
+            const rotX = rotXDeg * Math.PI / 180;
+            const rotZ = rotZDeg * Math.PI / 180;
+            const cosX = Math.cos(rotX), sinX = Math.sin(rotX);
+            const cosZ = Math.cos(rotZ), sinZ = Math.sin(rotZ);
+
+            // Grid visual center on screen (game-area center + perspective offset)
+            const centerScreenX = areaRect.left + areaRect.width / 2 + offsetX;
+            const centerScreenY = areaRect.top + areaRect.height / 2 + offsetY;
+
+            const localCorners = [
+                { x: -halfW, y: -halfH, name: 'nw' },
+                { x:  halfW, y: -halfH, name: 'ne' },
+                { x:  halfW, y:  halfH, name: 'se' },
+                { x: -halfW, y:  halfH, name: 'sw' },
+            ];
+
+            return localCorners.map(c => {
+                // rotateX: y' = y*cos(rx), z' = y*sin(rx)
+                const y1 = c.y * cosX;
+                const z1 = c.y * sinX;
+                // rotateZ: rotate in XY plane
+                const x2 = c.x * cosZ - y1 * sinZ;
+                const y2 = c.x * sinZ + y1 * cosZ;
+                const z2 = z1;
+                // Perspective projection + scale
+                const pScale = perspective / (perspective - z2);
+                return {
+                    name: c.name,
+                    x: centerScreenX + x2 * pScale * scale,
+                    y: centerScreenY + y2 * pScale * scale,
+                };
+            });
+        };
+        
+        const updateHandlePositions = () => {
+            if (!manualMode) return;
+            
+            const corners = getGridCorners();
+            if (!corners) return;
+            
+            handles.forEach(handle => {
+                const corner = corners.find(c => c.name === handle.dataset.corner);
+                if (corner) {
+                    handle.style.left = (corner.x - 10) + 'px';
+                    handle.style.top = (corner.y - 10) + 'px';
+                }
+            });
+            
+            updateDevInfo();
+        };
+
+        const updateDevInfo = () => {
+            const style = getComputedStyle(document.documentElement);
+            const cellSize = parseInt(style.getPropertyValue('--cell-size')) || 0;
+            const offsetX = parseFloat(style.getPropertyValue('--iso-offset-x')) || 0;
+            const offsetY = parseFloat(style.getPropertyValue('--iso-offset-y')) || 0;
+            const rotX = style.getPropertyValue('--iso-rotate-x').trim() || '0deg';
+            const rotZ = style.getPropertyValue('--iso-rotate-z').trim() || '0deg';
+            
+            document.getElementById('dev-info').textContent = 
+                `cell: ${cellSize}px, offset: (${offsetX.toFixed(0)}, ${offsetY.toFixed(0)}), rot: (${rotX}, ${rotZ})`;
+        };
+
+        const enableManualMode = () => {
+            manualMode = true;
+            handlesContainer.classList.remove('hidden');
+            setTimeout(updateHandlePositions, 50);
+        };
+
+        const disableManualMode = () => {
+            manualMode = false;
+            handlesContainer.classList.add('hidden');
+            if (typeof Grid !== 'undefined') {
+                Grid.scaleToViewport();
+            }
+        };
+
+        manualCheckbox.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                enableManualMode();
+            } else {
+                disableManualMode();
+            }
+        });
+
+        // Drag handling - dragging corners changes cell size and offset
+        let dragging = null;
+        let dragStartX, dragStartY;
+        let startCellSize, startOffsetX, startOffsetY;
+        let startCorners;
+
+        const onMouseDown = (e) => {
+            if (!manualMode) return;
+            
+            dragging = e.target.dataset.corner;
+            dragStartX = e.clientX;
+            dragStartY = e.clientY;
+            
+            const style = getComputedStyle(document.documentElement);
+            startCellSize = parseInt(style.getPropertyValue('--cell-size')) || 100;
+            startOffsetX = parseFloat(style.getPropertyValue('--iso-offset-x')) || 0;
+            startOffsetY = parseFloat(style.getPropertyValue('--iso-offset-y')) || 0;
+            startCorners = getGridCorners();
+            
+            e.preventDefault();
+        };
+
+        const onMouseMove = (e) => {
+            if (!dragging) return;
+            
+            const dx = e.clientX - dragStartX;
+            const dy = e.clientY - dragStartY;
+            
+            // Find the corner being dragged
+            const startCorner = startCorners.find(c => c.name === dragging);
+            if (!startCorner) return;
+            
+            // Calculate how much the corner moved from center
+            const gameArea = document.querySelector('.game-area');
+            const areaRect = gameArea.getBoundingClientRect();
+            const centerX = areaRect.left + areaRect.width / 2;
+            const centerY = areaRect.top + areaRect.height / 2;
+            
+            // Old distance from center
+            const oldDistX = startCorner.x - centerX;
+            const oldDistY = startCorner.y - centerY;
+            const oldDist = Math.sqrt(oldDistX * oldDistX + oldDistY * oldDistY);
+            
+            // New corner position
+            const newCornerX = startCorner.x + dx;
+            const newCornerY = startCorner.y + dy;
+            
+            // New distance from center
+            const newDistX = newCornerX - centerX;
+            const newDistY = newCornerY - centerY;
+            const newDist = Math.sqrt(newDistX * newDistX + newDistY * newDistY);
+            
+            // Scale factor
+            const scaleFactor = oldDist > 0 ? newDist / oldDist : 1;
+            
+            // New cell size based on scale
+            let newCellSize = Math.round(startCellSize * scaleFactor);
+            newCellSize = Math.max(30, Math.min(300, newCellSize));
+            
+            // Offset: shift grid to recenter based on drag
+            // The offset moves the visual center
+            let newOffsetX = startOffsetX + dx * 0.5;
+            let newOffsetY = startOffsetY + dy * 0.5;
+            
+            document.documentElement.style.setProperty('--cell-size', newCellSize + 'px');
+            document.documentElement.style.setProperty('--iso-offset-x', newOffsetX + 'px');
+            document.documentElement.style.setProperty('--iso-offset-y', newOffsetY + 'px');
+            
+            if (typeof Grid !== 'undefined') {
+                Grid.cellSize = newCellSize;
+            }
+            
+            updateHandlePositions();
+        };
+
+        const onMouseUp = () => {
+            dragging = null;
+        };
+
+        handles.forEach(handle => {
+            handle.addEventListener('mousedown', onMouseDown);
+        });
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+
+        // Copy values button
+        document.getElementById('dev-copy-values').addEventListener('click', () => {
+            const style = getComputedStyle(document.documentElement);
+            const corners = getGridCorners();
+            const gameArea = document.querySelector('.game-area');
+            const areaRect = gameArea ? gameArea.getBoundingClientRect() : null;
+            
+            const values = {
+                cellSize: parseInt(style.getPropertyValue('--cell-size')) || 0,
+                offsetX: parseFloat(style.getPropertyValue('--iso-offset-x')) || 0,
+                offsetY: parseFloat(style.getPropertyValue('--iso-offset-y')) || 0,
+                rotateX: style.getPropertyValue('--iso-rotate-x').trim(),
+                rotateZ: style.getPropertyValue('--iso-rotate-z').trim(),
+                perspective: style.getPropertyValue('--iso-perspective').trim(),
+                scale: parseFloat(style.getPropertyValue('--iso-effective-scale')) || 1,
+                gameAreaSize: areaRect ? { width: areaRect.width, height: areaRect.height } : null,
+                corners: corners
+            };
+            
+            const text = JSON.stringify(values, null, 2);
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = document.getElementById('dev-copy-values');
+                const orig = btn.textContent;
+                btn.textContent = 'Copied!';
+                setTimeout(() => { btn.textContent = orig; }, 1500);
+            });
+            
+        });
+
+        // Update handle positions on window resize or transform change
+        window.addEventListener('resize', () => {
+            if (manualMode) {
+                setTimeout(updateHandlePositions, 50);
+            }
+        });
+
+        // Keyboard shortcut: Ctrl+Shift+D
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.shiftKey && e.key === 'D') {
+                e.preventDefault();
+                togglePanel();
+            }
+        });
+
+        // Auto-open if ?dev=1 in URL
+        if (window.location.search.includes('dev=1')) {
+            panel.classList.remove('hidden');
+        }
+
+        // Set default preset only if not already set by loadGameSettings
+        if (!document.documentElement.style.getPropertyValue('--iso-preset')) {
+            document.documentElement.style.setProperty('--iso-preset', '1');
+        }
     }
 };
 

@@ -43,44 +43,160 @@ const Grid = {
     },
 
     // Scale the grid to fill the viewport
+    // 
+    // KEY INSIGHT: CSS perspective distorts the grid - points closer to the viewer
+    // appear larger. We must project corners through perspective to find the TRUE
+    // visual bounding box and center.
+    //
     scaleToViewport() {
         const gameScreen = document.getElementById('game-screen');
         if (!gameScreen.classList.contains('active')) return;
 
-        const header = document.querySelector('.game-header');
-        
-        // Get available space
-        const viewportWidth = window.innerWidth;
-        const viewportHeight = window.innerHeight;
-        const padding = 20; // Padding around edges
-        
-        // Calculate header height
-        const headerHeight = header ? header.offsetHeight + 15 : 0; // +15 for gap
-        
-        // Available space for grid (no touch controls anymore)
-        const availableWidth = viewportWidth - padding * 2;
-        const availableHeight = viewportHeight - headerHeight - padding * 2;
-        
-        // Grid has 6 columns, 5 rows, gaps, padding, and border
+        const gameArea = document.querySelector('.game-area');
+        if (!gameArea) return;
+
+        const availableWidth = gameArea.clientWidth;
+        const availableHeight = gameArea.clientHeight;
+        const padding = 20;
+
+        // Read current preset and perspective
+        const style = getComputedStyle(document.documentElement);
+        const preset = parseInt(style.getPropertyValue('--iso-preset')) || 4;
+        const perspective = parseFloat(style.getPropertyValue('--iso-perspective')) || 800;
+        const isoScale = parseFloat(style.getPropertyValue('--iso-scale')) || 1;
+
+        // Presets: [rotateX, rotateZ, name]
+        const presets = [
+            [0, 0, 'Flat (2D)'],
+            [30, 0, 'Slight Tilt'],
+            [45, 0, 'Medium Tilt'],
+            [55, 0, 'Classic Iso'],
+            [55, 45, 'Diamond'],
+        ];
+
+        const [rotXDeg, rotZDeg, presetName] = presets[preset - 1] || presets[0];
+        const rotX = rotXDeg * Math.PI / 180;
+        const rotZ = rotZDeg * Math.PI / 180;
+
+        // Grid layout constants
         const gridPadding = 10;
         const gridBorder = 3;
         const gap = Math.max(2, Math.min(6, availableWidth * 0.005));
-        
-        // Calculate cell size to fit
-        const cellFromWidth = (availableWidth - gridPadding * 2 - gridBorder * 2 - gap * 5) / 6;
-        const cellFromHeight = (availableHeight - gridPadding * 2 - gridBorder * 2 - gap * 4) / 5;
-        
-        const cellSize = Math.floor(Math.min(cellFromWidth, cellFromHeight));
-        
-        // Set CSS variable
+        const fixedOverhead = gridPadding * 2 + gridBorder * 2;
+        const gapW = 5 * gap + fixedOverhead;
+        const gapH = 4 * gap + fixedOverhead;
+
+        const cosX = Math.cos(rotX);
+        const sinX = Math.sin(rotX);
+        const cosZ = Math.cos(rotZ);
+        const sinZ = Math.sin(rotZ);
+
+        const is3DMode = rotXDeg !== 0 || rotZDeg !== 0;
+
+        // Transform a point through rotateX, rotateZ, then perspective projection
+        // Input: (x, y) in grid plane (z=0), relative to grid center
+        // Output: (screenX, screenY) after perspective projection
+        const projectPoint = (x, y) => {
+            // After rotateX(rx): the point rotates around X axis
+            // y' = y * cos(rx), z' = y * sin(rx)
+            // (top of grid goes back into screen, bottom comes forward)
+            const y1 = y * cosX;
+            const z1 = y * sinX;  // positive = closer to viewer
+
+            // After rotateZ(rz): rotate around Z axis in XY plane
+            const x2 = x * cosZ - y1 * sinZ;
+            const y2 = x * sinZ + y1 * cosZ;
+            const z2 = z1;  // Z unchanged by rotateZ
+
+            // Perspective projection: scale = P / (P - z)
+            // Points with positive z (closer) get scale > 1 (appear larger)
+            const scale = perspective / (perspective - z2);
+            
+            return {
+                x: x2 * scale,
+                y: y2 * scale,
+                z: z2,
+                scale: scale
+            };
+        };
+
+        // Calculate visual bounding box for a given cell size
+        // Returns the bounding box in screen space AFTER perspective projection
+        const computeProjectedBoundingBox = (cellSize) => {
+            const gridW = 6 * cellSize + gapW;
+            const gridH = 5 * cellSize + gapH;
+            const halfW = gridW / 2;
+            const halfH = gridH / 2;
+
+            // Four corners of grid in grid-plane coordinates (before any transform)
+            const corners = [
+                { x: -halfW, y: -halfH },  // top-left
+                { x:  halfW, y: -halfH },  // top-right
+                { x:  halfW, y:  halfH },  // bottom-right
+                { x: -halfW, y:  halfH },  // bottom-left
+            ];
+
+            // Project each corner through the full transform chain
+            const projected = corners.map(c => projectPoint(c.x, c.y));
+
+            // Find bounding box of projected points
+            const xs = projected.map(p => p.x);
+            const ys = projected.map(p => p.y);
+            const minX = Math.min(...xs);
+            const maxX = Math.max(...xs);
+            const minY = Math.min(...ys);
+            const maxY = Math.max(...ys);
+
+            return {
+                width: maxX - minX,
+                height: maxY - minY,
+                // Visual center (center of projected bounding box) relative to grid center
+                centerX: (minX + maxX) / 2,
+                centerY: (minY + maxY) / 2,
+                // For debugging
+                corners: projected
+            };
+        };
+
+        // Binary search for largest cell size that fits
+        const targetW = (availableWidth - padding * 2) / isoScale;
+        const targetH = (availableHeight - padding * 2) / isoScale;
+
+        let lo = 30, hi = 300;
+        while (hi - lo > 1) {
+            const mid = Math.floor((lo + hi) / 2);
+            const bb = computeProjectedBoundingBox(mid);
+            if (bb.width <= targetW && bb.height <= targetH) {
+                lo = mid;
+            } else {
+                hi = mid;
+            }
+        }
+        const cellSize = lo;
+
+        // Compute final bounding box
+        const bb = computeProjectedBoundingBox(cellSize);
+
+        // The visual center (after perspective) is offset from grid center.
+        // To center the visual, we offset the grid position by the negative of this.
+        // These offsets are in screen space, so we apply them via CSS left/top.
+        const offsetX = -bb.centerX * isoScale;
+        const offsetY = -bb.centerY * isoScale;
+
+        // Set CSS variables
         document.documentElement.style.setProperty('--cell-size', cellSize + 'px');
         document.documentElement.style.setProperty('--grid-gap', gap + 'px');
-        
-        // Update cached dimensions
+        document.documentElement.style.setProperty('--iso-rotate-x', rotXDeg + 'deg');
+        document.documentElement.style.setProperty('--iso-rotate-z', rotZDeg + 'deg');
+        document.documentElement.style.setProperty('--iso-effective-scale', isoScale);
+        document.documentElement.style.setProperty('--iso-offset-x', offsetX + 'px');
+        document.documentElement.style.setProperty('--iso-offset-y', offsetY + 'px');
+        document.documentElement.style.setProperty('--iso-3d-mode', is3DMode ? '1' : '0');
+        this.element.classList.toggle('iso-3d-mode', is3DMode);
+
         this.cellSize = cellSize;
         this.gridGap = gap;
-        
-        // Update nosher position if game is active
+
         if (typeof Game !== 'undefined' && Game.nosher) {
             const pos = Game.nosher.getPosition();
             this.updateNosherPosition(pos.x, pos.y);
@@ -248,43 +364,43 @@ const Grid = {
         const flyingNumber = document.createElement('div');
         flyingNumber.className = 'flying-number';
         flyingNumber.textContent = value;
-        
-        // Get cell position
-        const cellRect = cellElement.getBoundingClientRect();
-        const gridRect = this.element.getBoundingClientRect();
-        
-        // Position at cell center (relative to grid wrapper)
-        const startX = cellRect.left - gridRect.left + cellRect.width / 2;
-        const startY = cellRect.top - gridRect.top + cellRect.height / 2;
-        
+
+        // Use grid-based coordinates (pre-transform space) instead of
+        // getBoundingClientRect (post-transform screen space), so the
+        // animation works correctly with isometric 3D transforms.
+        const cellX = parseInt(cellElement.dataset.x);
+        const cellY = parseInt(cellElement.dataset.y);
+        const cellPos = this.getPixelPosition(cellX, cellY);
+        const halfCell = this.cellSize / 2;
+        const startX = cellPos.x + halfCell;
+        const startY = cellPos.y + halfCell;
+
         flyingNumber.style.left = startX + 'px';
         flyingNumber.style.top = startY + 'px';
         flyingNumber.style.transform = 'translate(-50%, -50%)';
-        
-        // Calculate destination (nosher's mouth)
-        // Nosher body is 80% of cell, centered. Mouth is at bottom: 18% of body.
-        // So mouth center is roughly at: 10% (top margin) + 80% * 0.75 = 70% from top
-        const nosherRect = this.nosherSprite.getBoundingClientRect();
-        const mouthX = nosherRect.left - gridRect.left + nosherRect.width / 2;
-        const mouthY = nosherRect.top - gridRect.top + nosherRect.height * 0.6;
-        
+
+        // Calculate destination (nosher's mouth) using grid coordinates
+        const nosherPos = this.getPixelPosition(Game.nosher.x, Game.nosher.y);
+        const mouthX = nosherPos.x + halfCell;
+        const mouthY = nosherPos.y + this.cellSize * 0.6;
+
         // Set CSS variables for animation
         const flyX = mouthX - startX;
         const flyY = mouthY - startY;
         flyingNumber.style.setProperty('--fly-x', flyX + 'px');
         flyingNumber.style.setProperty('--fly-y', flyY + 'px');
-        
+
         // Add to grid wrapper
         this.element.parentElement.appendChild(flyingNumber);
-        
+
         // Open nosher's mouth
         this.nosherSprite.classList.add('eating');
-        
+
         // Trigger animation
         requestAnimationFrame(() => {
             flyingNumber.classList.add('animate');
         });
-        
+
         // Remove after animation
         setTimeout(() => {
             flyingNumber.remove();
@@ -318,13 +434,29 @@ const Grid = {
             newCell.classList.add('nosher-cell');
         }
 
-        // Move the sprite with CSS transform
+        // Move the sprite with CSS transform, counter-rotating to stay upright
         if (this.nosherSprite) {
             const pixelPos = this.getPixelPosition(x, y);
-            const transform = `translate(${pixelPos.x}px, ${pixelPos.y}px)`;
+            // Read isometric angles for counter-rotation (billboard sprite)
+            const style = getComputedStyle(document.documentElement);
+            const rx = parseFloat(style.getPropertyValue('--iso-rotate-x')) || 0;
+            const rz = parseFloat(style.getPropertyValue('--iso-rotate-z')) || 0;
+            
+            // 2D/3D mode: In 3D mode (any rotation), pin bottom of sprite to cell center
+            // In 2D mode (no rotation), center sprite on cell center
+            const is3DMode = rx !== 0 || rz !== 0;
+            const halfCell = this.cellSize / 2;
+            
+            // In 3D mode, shift sprite up by half its height so bottom aligns with cell center
+            const yOffset = is3DMode ? -halfCell : 0;
+            
+            const transform = `translate(${pixelPos.x}px, ${pixelPos.y + yOffset}px) rotateZ(${-rz}deg) rotateX(${-rx}deg)`;
             this.nosherSprite.style.transform = transform;
-            // Store current transform for animations
+            // Store current transform for animations (bounce composites on top)
             this.nosherSprite.style.setProperty('--current-transform', transform);
+            
+            // Toggle 3D mode class for CSS adjustments
+            this.nosherSprite.classList.toggle('iso-3d-mode', is3DMode);
 
             // Add transparency when over an unnoshed cell (has a number visible)
             const currentCell = this.getCell(x, y);

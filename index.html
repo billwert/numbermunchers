@@ -180,11 +180,13 @@
     <!-- Game Screen -->
     <div id="game-screen" class="screen">
         <div class="game-container">
-            <!-- Game Header -->
+            <!-- Game Header - pinned to top, never transforms -->
             <div class="game-header">
                 <div class="game-rule">
                     <span class="rule-label">Find:</span>
                     <span id="current-rule" class="rule-text">Multiples of 3</span>
+                    <button id="view-toggle-btn" class="view-toggle-btn">3D</button>
+                    <button id="pause-btn" class="pause-btn" data-action="pause">⏸️</button>
                 </div>
                 <div class="game-stats">
                     <div class="stat">
@@ -200,20 +202,21 @@
                         <span id="lives" class="stat-value lives">❤️❤️❤️❤️</span>
                     </div>
                 </div>
-                <button id="pause-btn" class="pause-btn" data-action="pause">⏸️</button>
             </div>
 
-            <!-- Game Grid -->
-            <div class="grid-wrapper">
-                <div id="game-grid" class="game-grid">
-                    <!-- 6x5 grid cells populated by JS -->
-                </div>
-                <!-- Nosher Sprite (animated separately for smooth movement) -->
-                <div id="nosher-sprite" class="nosher-sprite">
-                    <div class="nosher-body">
-                        <div class="nosher-eye left"></div>
-                        <div class="nosher-eye right"></div>
-                        <div class="nosher-mouth"></div>
+            <!-- Game Area - fills remaining space, contains the transformed grid -->
+            <div class="game-area">
+                <div class="grid-wrapper">
+                    <div id="game-grid" class="game-grid">
+                        <!-- 6x5 grid cells populated by JS -->
+                    </div>
+                    <!-- Nosher Sprite (animated separately for smooth movement) -->
+                    <div id="nosher-sprite" class="nosher-sprite">
+                        <div class="nosher-body">
+                            <div class="nosher-eye left"></div>
+                            <div class="nosher-eye right"></div>
+                            <div class="nosher-mouth"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -272,6 +275,43 @@
 
     <!-- Confetti Container -->
     <div id="confetti-container" class="confetti-container"></div>
+
+    <!-- Dev Mode: Isometric Controls (Ctrl+Shift+D or ?dev=1) -->
+    <div id="dev-panel" class="dev-panel hidden">
+        <div class="dev-panel-header">
+            <span>Isometric Presets</span>
+            <button id="dev-panel-close" class="dev-close-btn">&times;</button>
+        </div>
+        <div class="dev-panel-body">
+            <div class="preset-buttons">
+                <button class="preset-btn" data-preset="1">1: Flat (2D)</button>
+                <button class="preset-btn" data-preset="2">2: Slight Tilt (30°)</button>
+                <button class="preset-btn" data-preset="3">3: Medium Tilt (45°)</button>
+                <button class="preset-btn selected" data-preset="4">4: Classic Iso (55°)</button>
+                <button class="preset-btn" data-preset="5">5: Diamond (55°/45°)</button>
+            </div>
+            <hr style="border-color: var(--color-cell-border); margin: 10px 0;">
+            <div class="dev-manual-controls">
+                <label class="dev-checkbox">
+                    <input type="checkbox" id="dev-manual-mode">
+                    <span>Manual Resize Mode</span>
+                </label>
+                <p class="dev-hint">Drag corner handles to resize grid</p>
+                <button id="dev-copy-values" class="dev-btn">Copy Values</button>
+            </div>
+            <div class="dev-info" id="dev-info">
+                Preset 4: rotateX=55°, rotateZ=0°
+            </div>
+        </div>
+    </div>
+
+    <!-- Resize handles (shown in manual mode) -->
+    <div id="resize-handles" class="resize-handles hidden">
+        <div class="resize-handle" data-corner="nw"></div>
+        <div class="resize-handle" data-corner="ne"></div>
+        <div class="resize-handle" data-corner="se"></div>
+        <div class="resize-handle" data-corner="sw"></div>
+    </div>
 
     <!-- Scripts -->
     <script src="js/storage.js"></script>
