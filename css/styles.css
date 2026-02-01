@@ -43,7 +43,7 @@
 
     /* Isometric view */
     --iso-perspective: 800px;
-    --iso-rotate-x: 55deg;
+    --iso-rotate-x: 45deg;
     --iso-rotate-z: 0deg;
     --iso-scale: 1.0;
 
@@ -651,6 +651,32 @@ body {
 .lives {
     font-size: clamp(0.9rem, 2.5vmin, 1.2rem);
     letter-spacing: 2px;
+}
+
+/* View Toggle Button (2D/3D) */
+.view-toggle-btn {
+    position: absolute;
+    top: 10px;
+    right: 60px;
+    width: 44px;
+    height: 44px;
+    font-size: 0.85rem;
+    font-weight: bold;
+    background: var(--color-cell-bg);
+    border: 2px solid var(--color-cell-border);
+    border-radius: var(--border-radius);
+    color: var(--color-text);
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.view-toggle-btn:hover,
+.view-toggle-btn:active {
+    background: var(--color-primary);
+    transform: scale(1.05);
 }
 
 /* Pause Button */
@@ -1468,53 +1494,6 @@ body {
     display: flex;
     flex-direction: column;
     gap: 4px;
-}
-
-.dev-label {
-    font-size: 0.8rem;
-    color: var(--color-text-muted);
-}
-
-.dev-label span {
-    color: var(--color-text);
-    font-weight: bold;
-}
-
-.dev-panel-body input[type="range"] {
-    width: 100%;
-    height: 6px;
-    -webkit-appearance: none;
-    appearance: none;
-    background: var(--color-cell-bg);
-    border-radius: 3px;
-    outline: none;
-    cursor: pointer;
-}
-
-.dev-panel-body input[type="range"]::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    background: var(--color-primary);
-    border: 2px solid var(--color-primary-dark);
-    cursor: pointer;
-}
-
-.dev-panel-body input[type="range"]::-moz-range-thumb {
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    background: var(--color-primary);
-    border: 2px solid var(--color-primary-dark);
-    cursor: pointer;
-}
-
-.dev-buttons {
-    display: flex;
-    gap: 8px;
-    margin-top: 4px;
 }
 
 .dev-btn {

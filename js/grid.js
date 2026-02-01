@@ -74,7 +74,7 @@ const Grid = {
             [55, 45, 'Diamond'],
         ];
 
-        const [rotXDeg, rotZDeg, presetName] = presets[preset - 1] || presets[3];
+        const [rotXDeg, rotZDeg, presetName] = presets[preset - 1] || presets[2];
         const rotX = rotXDeg * Math.PI / 180;
         const rotZ = rotZDeg * Math.PI / 180;
 
@@ -193,14 +193,6 @@ const Grid = {
         document.documentElement.style.setProperty('--iso-offset-y', offsetY + 'px');
         document.documentElement.style.setProperty('--iso-3d-mode', is3DMode ? '1' : '0');
         this.element.classList.toggle('iso-3d-mode', is3DMode);
-
-        console.log('scaleToViewport:', {
-            preset, presetName, rotXDeg, rotZDeg, perspective,
-            availableWidth, availableHeight,
-            cellSize,
-            projectedBB: { width: bb.width, height: bb.height, centerX: bb.centerX, centerY: bb.centerY },
-            offset: { x: offsetX, y: offsetY }
-        });
 
         this.cellSize = cellSize;
         this.gridGap = gap;

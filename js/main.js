@@ -447,6 +447,14 @@ const Main = {
             });
         }
 
+        // View toggle button (2D/3D)
+        const viewToggleBtn = document.getElementById('view-toggle-btn');
+        if (viewToggleBtn) {
+            viewToggleBtn.addEventListener('click', () => {
+                this.toggleViewMode();
+            });
+        }
+
         // Menu option hover
         document.querySelectorAll('.menu-options .menu-btn').forEach((btn, i) => {
             btn.addEventListener('mouseenter', () => {
@@ -630,6 +638,29 @@ const Main = {
         if (typeof Game !== 'undefined') {
             Game.mouseAutopilot = settings.mouseAutopilot || false;
             Game.testingMode = settings.testingMode || false;
+        }
+        // Apply saved view mode (2D or 3D)
+        this.applyViewMode(settings.viewMode || '3d');
+    },
+
+    // Toggle between 2D and 3D view modes
+    toggleViewMode() {
+        const current = Storage.getSettings().viewMode || '3d';
+        const next = current === '3d' ? '2d' : '3d';
+        Storage.saveSettings({ viewMode: next });
+        this.applyViewMode(next);
+        Grid.scaleToViewport();
+    },
+
+    // Apply view mode: set preset and update toggle button text
+    applyViewMode(mode) {
+        // Preset 1 = Flat (2D), Preset 3 = Medium Tilt (3D)
+        const preset = mode === '2d' ? 1 : 3;
+        document.documentElement.style.setProperty('--iso-preset', preset);
+        const btn = document.getElementById('view-toggle-btn');
+        if (btn) {
+            // Button shows what you'll switch TO
+            btn.textContent = mode === '3d' ? '2D' : '3D';
         }
     },
 
@@ -1014,7 +1045,6 @@ const Main = {
                 setTimeout(() => { btn.textContent = orig; }, 1500);
             });
             
-            console.log('Grid values:', values);
         });
 
         // Update handle positions on window resize or transform change
@@ -1037,8 +1067,10 @@ const Main = {
             panel.classList.remove('hidden');
         }
 
-        // Set default preset
-        document.documentElement.style.setProperty('--iso-preset', '4');
+        // Set default preset only if not already set by loadGameSettings
+        if (!document.documentElement.style.getPropertyValue('--iso-preset')) {
+            document.documentElement.style.setProperty('--iso-preset', '3');
+        }
     }
 };
 
