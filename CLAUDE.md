@@ -42,11 +42,32 @@ numbernoshers/
 - `Main.showScreen(screenName)` handles transitions
 - Screens: splash, menu, gamemode, game, gameover, highscores, howtoplay, settings
 
-### Input System
-- **Unified input handler** in `input.js`
-- Callbacks: `onMove`, `onAction`, `onPause`, `onAnyKey`
-- Each screen sets up its own input callbacks via `Input.clearCallbacks()`
-- Supports keyboard, mouse, touch, and gamepad
+### Unified Input System (`input.js`)
+Single input handler supports keyboard, mouse, touch, and gamepad via callbacks:
+- `Input.onMove(direction)` - up/down/left/right navigation
+- `Input.onAction()` - primary action (nosh/select)
+- `Input.onPause()` - pause game
+- `Input.onAnyKey()` - for splash screen
+Game Loop Coordination (`gameloop.js`)
+Tick-based system (default 800ms per tick) coordinates all game entities synchronously:
+1. **TroggleSpawner** checks if new Troggles should spawn
+2. **SafetySquares** updates expiration timers and flashing
+3. **Troggles** plan moves, resolve conflicts, execute moves
+4. **Collision detection** runs after Troggle movement
+5. **Pathfinding** recalculates if autopilot active
+
+**Important**: Use `GameLoop.pause()`/`GameLoop.resume()` for pausing, not just setting state flags.
+
+### State Management
+- `Main.currentScreen` - tracks active screen (string)
+- `Game.state` - gameplay state: `'idle'`, `'playing'`, `'paused'`, `'gameover'`, `'levelcomplete'`
+- `Main.cameFromPause` - boolean flag tracking if settings opened from pause menu (affects ESC key behavior)
+// Example screen transition pattern
+Main.showScreen('game');
+Input.clearCallbacks();
+Input.onMove = (dir) => { /* handle movement */ };
+Input.onAction = () => { /* handle action */ };
+```
 
 ### State Management
 - `Main.currentScreen` - tracks active screen
@@ -66,11 +87,17 @@ numbernoshers/
 - For Equality/Inequality modes, grid cells contain expression strings; cells get `.expression-cell` CSS class for smaller font
 
 ### Grid System (`grid.js`)
+6×5 grid with isometric 3D perspective using CSS transforms. Each cell: `{value, isCorrect, noshed, x, y}`
 
-- 6 columns × 5 rows
-- Each cell: `{value, isCorrect, noshed, x, y}`
-- Nosher sprite positioned absolutely with CSS transforms
-- Cell clicks support both direct movement and autopilot pathfinding
+**Perspective projection**: The grid uses CSS `perspective` and `rotateX`/`rotateZ` transforms. When scaling, must project corner points through perspective transform to find true visual bounds (see `Grid.scaleToViewport()` comments).
+
+```javascript
+// Example cell access
+const cell = Grid.cells[y * Grid.COLS + x];
+if (!cell.noshed && cell.isCorrect) {
+    // Valid move
+}
+```
 
 ### Nosher (`nosher.js`)
 - Player character
@@ -78,14 +105,32 @@ numbernoshers/
 - Movement validation (grid boundaries)
 - CSS sprite positioned by `Grid.updateNosherPosition()`
 
-### Troggles (`troggle.js`)
-- Enemies that chase the player
-- Use A* pathfinding to navigate around noshed cells
-- Speed increases with level
-- Movement handled by `setInterval` with configurable speed
+### Troggle Types (`troggle.js`)
+Five enemy types with distinct AI behaviors:
+- **Reggie** (`👾`): Linear bounce movement
+- **Bashful** (`👻`): Random movement, flees when Nosher close
+- **Helper** (`🐛`): Eats correct answers (removes from board)
+- **Worker** (`🔧`): Modifies/adds answers
+- **Smartie** (`🤖`): A* pathfinding pursuit
+
+Troggles spawned via `TroggleSpawner` on a schedule (not all at once). Check `troggle-spawner.js` for spawn timing.
+
+### Safety Squares (`safety-squares.js`)
+Protected cells that Troggles cannot enter. Key characteristics:
+- Max 3 safety squares at a time
+- Expire after 3-8 ticks (tick-based, not real-time)
+- Flash in last tick before expiring
+- Block Troggle pathfinding
 
 ### Settings (`main.js` + `storage.js`)
-- **Settings are always saved** (auto-save pattern)
+Settings save to LocalStorage immediately on change - **no explicit save button**. This is why the settings button says "Back" not "Save & Back".
+
+```javascript
+// Settings pattern used throughout
+Storage.set('musicVolume', value);  // Saves immediately
+Sound.setMusicVolume(value);         // Apply immediately
+```
+
 - Music volume, SFX volume, Mouse Autopilot
 - Stored in LocalStorage
 - ESC key closes settings and returns to previous screen
@@ -101,18 +146,40 @@ numbernoshers/
 
 ## Important Patterns
 
-### Input Handler Setup
-When switching screens, **always**:
-1. Call `Input.clearCallbacks()` first
-2. Set new callbacks for current screen
-3. When returning to game from settings during pause, call `Game.setupInputHandlers()`
+### Input Patterns & Gotchas
 
-### Pause Menu from Settings
-Track with `Main.cameFromPause` flag:
-- `true` when opening settings from pause menu
-- Return to pause overlay (not resume game) when closing
-- Re-setup game input handlers on return
+### Pause State Management
+Game has TWO pause concepts that must stay synchronized:
+1. `Game.state = 'paused'` (internal state)
+2. `#pause-overlay.active` (UI visibility)
 
+When going to settings from pause menu:
+```javascript
+// Set flag to return to pause menu (not resume game)
+Main.cameFromPause = true;
+
+// On return from settings:
+if (Main.cameFromPause) {
+    Main.showScreen('game');  // Show game screen
+    // Show pause overlay (don't resume)
+    document.getElementById('pause-overlay').classList.add('active');
+    Game.setupInputHandlers();  // Re-setup input handlers
+    Main.cameFromPause = false;
+}
+```
+
+### Nosher Positioning
+Uses CSS transforms for smooth animation, not DOM position. Update via `Grid.updateNosherPosition(x, y)` which applies `translate()` transform.
+
+### Testing Mode
+Dev mode (`Ctrl+Shift+D` or `?dev=1`): Places one correct answer at (0,0) for rapid testing. Enabled via `Game.testingMode` boolean.
+
+### Other GConventions
+- CSS custom properties for theming (e.g., `--iso-preset`, `--iso-perspective`)
+- Responsive sizing with `clamp()` and `min()` functions
+- CSS Grid layout for game grid
+- Animations via keyframes for performance
+- Touch controls visibility auto-detected via `ontouchstart` check
 ### Screen Transitions
 ```javascript
 Main.showScreen('screenName')
@@ -124,7 +191,22 @@ Main.showScreen('screenName')
 
 ## Common Gotchas
 
-1. **Input Callbacks**: Always clear callbacks before setting new ones to avoid stacking
+1. *ile Organization
+- `main.js` - Entry point, screen management, settings UI
+- `game.js` - Core game state, scoring, level progression
+- `gameloop.js` - Tick-based coordination
+- `grid.js` - Grid rendering, scaling, cell management
+- `input.js` - Unified input abstraction
+- `nosher.js` - Player character (simple x/y tracking)
+- `troggle.js` - Enemy AI and movement
+- `troggle-spawner.js` - Scheduled Troggle spawning
+- `safety-squares.js` - Protected cell management
+- `pathfinding.js` - A* for autopilot and Smartie Troggles
+- `levels.js` - Game mode definitions, rule text, number generation
+- `sound.js` - Audio management
+- `storage.js` - LocalStorage wrapper
+
+## F*Input Callbacks**: Always clear callbacks before setting new ones to avoid stacking
 2. **Pause State**: Game has TWO pause concepts:
    - `Game.state = 'paused'` (internal state)
    - `#pause-overlay.active` (UI visibility)
