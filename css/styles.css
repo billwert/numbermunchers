@@ -739,26 +739,55 @@ body {
     .game-header {
         flex-shrink: 0;
         width: auto;
-        max-width: 200px;
+        min-width: 200px;
+        max-width: min(300px, 28vw);
         height: 100%;
-        padding: 10px;
+        padding: 15px;
         display: flex;
         flex-direction: column;
         justify-content: center;
-        gap: 10px;
+        gap: 12px;
     }
     
     .game-rule {
         margin-bottom: 0;
-        padding: 10px 15px;
+        padding: 12px 18px;
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
     }
     
-    .rule-label {
-        font-size: 0.75rem;
+    .game-rule .rule-label {
+        font-size: 0.8rem;
+        width: 100%;
+        order: 1;
     }
     
-    .rule-text {
-        font-size: 1rem;
+    .game-rule .rule-text {
+        font-size: 1.1rem;
+        width: 100%;
+        margin-bottom: 10px;
+        order: 2;
+    }
+    
+    /* Buttons go under the text in landscape - side by side */
+    .game-rule .view-toggle-btn,
+    .game-rule .pause-btn {
+        position: static !important;
+        transform: none !important;
+        display: inline-flex;
+        order: 3;
+        margin: 0 4px;
+    }
+    
+    .game-rule .view-toggle-btn:hover,
+    .game-rule .view-toggle-btn:active,
+    .game-rule .pause-btn:hover,
+    .game-rule .pause-btn:active {
+        transform: scale(1.05) !important;
     }
     
     .game-stats {
@@ -768,58 +797,52 @@ body {
     
     .stat {
         min-width: unset;
-        padding: 6px 12px;
+        padding: 8px 14px;
     }
     
     .stat-label {
-        font-size: 0.65rem;
+        font-size: 0.7rem;
     }
     
     .stat-value {
-        font-size: 1rem;
-    }
-    
-    .pause-btn {
-        position: static;
-        transform: none;
-        margin-top: 10px;
-        align-self: center;
-    }
-    
-    .view-toggle-btn {
-        position: static;
-        transform: none;
-        margin-top: 5px;
-        align-self: center;
+        font-size: 1.1rem;
     }
 }
 
 /* Landscape mobile (short height): even more compact */
 @media (orientation: landscape) and (max-height: 500px) {
     .game-header {
-        max-width: 150px;
-        padding: 5px;
-        gap: 5px;
+        min-width: 150px;
+        max-width: min(200px, 25vw);
+        padding: 8px;
+        gap: 6px;
     }
     
     .game-rule {
-        padding: 5px 10px;
+        padding: 8px 12px;
     }
     
-    .rule-label {
-        font-size: 0.6rem;
+    .game-rule .rule-label {
+        font-size: 0.65rem;
     }
     
-    .rule-text {
-        font-size: 0.85rem;
+    .game-rule .rule-text {
+        font-size: 0.9rem;
+        margin-bottom: 6px;
+    }
+    
+    .game-rule .view-toggle-btn,
+    .game-rule .pause-btn {
+        width: 32px;
+        height: 32px;
     }
     
     .game-stats {
-        gap: 4px;
+        gap: 5px;
     }
     
     .stat {
-        padding: 4px 8px;
+        padding: 5px 10px;
     }
     
     .stat-label {
@@ -827,18 +850,12 @@ body {
     }
     
     .stat-value {
-        font-size: 0.85rem;
+        font-size: 0.9rem;
     }
     
     .lives {
         font-size: 0.75rem;
         letter-spacing: 1px;
-    }
-    
-    .pause-btn {
-        width: 30px;
-        height: 30px;
-        margin-top: 5px;
     }
 }
 
