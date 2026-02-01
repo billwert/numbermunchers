@@ -144,6 +144,21 @@ Sound.setMusicVolume(value);         // Apply immediately
 5. ✅ **Game over button alignment** - Buttons now centered (added flexbox to container)
 6. ✅ **Pause menu ESC recovery** - Fixed ESC key not working after visiting settings from pause menu (re-setup input handlers)
 
+## Critical Regression Prevention
+
+### Grid Blur on Resume (DO NOT REMOVE!)
+When the app loses focus, numbers are blurred to prevent route planning:
+```javascript
+document.getElementById('game-grid').classList.add('paused');
+```
+
+**CRITICAL**: The blur MUST be cleared in `hideResumeOverlay()` AND `autoResumeGame()`:
+```javascript
+document.getElementById('game-grid').classList.remove('paused');
+```
+
+This line has been accidentally removed before causing a regression. The blur removal is in `main.js` in both resume functions - DO NOT remove it!
+
 ## Important Patterns
 
 ### Input Patterns & Gotchas

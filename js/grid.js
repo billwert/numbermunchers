@@ -66,6 +66,11 @@ const Grid = {
                         // Force reflow by reading a layout property
                         void gameArea.offsetHeight;
                     }
+                    // Force grid to re-render cells to fix alignment issues
+                    // This ensures cells match the new layout after rotation
+                    if (this.cells && this.cells.length > 0) {
+                        this.render();
+                    }
                     this.scaleToViewport();
                 });
             }, 300);

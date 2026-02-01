@@ -128,6 +128,10 @@ const Main = {
         const resumeOverlay = document.getElementById('resume-overlay');
         resumeOverlay.classList.remove('active');
 
+        // IMPORTANT: Always clear the blur effect when resuming
+        // This was a regression bug - make sure to keep this line!
+        document.getElementById('game-grid').classList.remove('paused');
+
         // Resume audio (this tap provides the required user gesture)
         Sound.init();
         Sound.resume();

@@ -730,39 +730,96 @@ body {
     display: block;
 }
 
-/* Landscape mobile: compact header to maximize game area */
-@media (orientation: landscape) and (max-height: 500px) {
-    .game-header {
-        padding: 5px;
-        max-width: 90vw;
+/* Landscape mode: put header/stats to the left of the board to maximize grid on short dimension */
+@media (orientation: landscape) {
+    .game-container {
+        flex-direction: row;
     }
     
-    .game-rule {
-        padding: 5px 15px;
-        margin-bottom: 5px;
+    .game-header {
+        flex-shrink: 0;
+        width: auto;
+        max-width: 200px;
+        height: 100%;
+        padding: 10px;
         display: flex;
-        align-items: center;
+        flex-direction: column;
+        justify-content: center;
         gap: 10px;
     }
     
+    .game-rule {
+        margin-bottom: 0;
+        padding: 10px 15px;
+    }
+    
     .rule-label {
-        font-size: 0.7rem;
-        display: inline;
+        font-size: 0.75rem;
     }
     
     .rule-text {
-        font-size: 0.9rem;
-        display: inline;
-        margin-top: 0;
+        font-size: 1rem;
     }
     
     .game-stats {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .stat {
+        min-width: unset;
+        padding: 6px 12px;
+    }
+    
+    .stat-label {
+        font-size: 0.65rem;
+    }
+    
+    .stat-value {
+        font-size: 1rem;
+    }
+    
+    .pause-btn {
+        position: static;
+        transform: none;
+        margin-top: 10px;
+        align-self: center;
+    }
+    
+    .view-toggle-btn {
+        position: static;
+        transform: none;
+        margin-top: 5px;
+        align-self: center;
+    }
+}
+
+/* Landscape mobile (short height): even more compact */
+@media (orientation: landscape) and (max-height: 500px) {
+    .game-header {
+        max-width: 150px;
+        padding: 5px;
         gap: 5px;
+    }
+    
+    .game-rule {
+        padding: 5px 10px;
+    }
+    
+    .rule-label {
+        font-size: 0.6rem;
+    }
+    
+    .rule-text {
+        font-size: 0.85rem;
+    }
+    
+    .game-stats {
+        gap: 4px;
     }
     
     .stat {
         padding: 4px 8px;
-        min-width: 50px;
     }
     
     .stat-label {
@@ -770,13 +827,18 @@ body {
     }
     
     .stat-value {
-        font-size: 0.9rem;
+        font-size: 0.85rem;
+    }
+    
+    .lives {
+        font-size: 0.75rem;
+        letter-spacing: 1px;
     }
     
     .pause-btn {
         width: 30px;
         height: 30px;
-        right: 4px;
+        margin-top: 5px;
     }
 }
 
