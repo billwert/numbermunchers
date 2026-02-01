@@ -72,6 +72,7 @@ body {
     justify-content: center;
     align-items: center;
     min-height: 100vh;
+    min-height: 100dvh; /* Dynamic viewport height for mobile */
     -webkit-tap-highlight-color: transparent;
     -webkit-user-select: none;
     -moz-user-select: none;
@@ -729,6 +730,56 @@ body {
     display: block;
 }
 
+/* Landscape mobile: compact header to maximize game area */
+@media (orientation: landscape) and (max-height: 500px) {
+    .game-header {
+        padding: 5px;
+        max-width: 90vw;
+    }
+    
+    .game-rule {
+        padding: 5px 15px;
+        margin-bottom: 5px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .rule-label {
+        font-size: 0.7rem;
+        display: inline;
+    }
+    
+    .rule-text {
+        font-size: 0.9rem;
+        display: inline;
+        margin-top: 0;
+    }
+    
+    .game-stats {
+        gap: 5px;
+    }
+    
+    .stat {
+        padding: 4px 8px;
+        min-width: 50px;
+    }
+    
+    .stat-label {
+        font-size: 0.55rem;
+    }
+    
+    .stat-value {
+        font-size: 0.9rem;
+    }
+    
+    .pause-btn {
+        width: 30px;
+        height: 30px;
+        right: 4px;
+    }
+}
+
 .stat-value {
     font-size: clamp(1rem, 3vmin, 1.5rem);
     font-weight: bold;
@@ -777,6 +828,13 @@ body {
     background: rgba(0, 0, 0, 0.4);
     border-color: rgba(255, 255, 255, 0.5);
     transform: translateY(-50%) scale(1.05);
+}
+
+/* Hide 3D toggle on touch devices - mobile always uses 2D mode */
+@media (pointer: coarse), (hover: none) {
+    .view-toggle-btn {
+        display: none !important;
+    }
 }
 
 /* =========================================

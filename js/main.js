@@ -163,6 +163,16 @@ const Main = {
         if (screen) {
             screen.classList.add('active');
             this.currentScreen = screenName;
+            
+            // If showing game screen, ensure grid is properly scaled
+            if (screenName === 'game' && typeof Grid !== 'undefined') {
+                // Small delay to let screen transition complete
+                setTimeout(() => {
+                    requestAnimationFrame(() => {
+                        Grid.scaleToViewport();
+                    });
+                }, 50);
+            }
         }
 
         // Set up screen-specific input handlers
@@ -737,12 +747,20 @@ const Main = {
             Game.mouseAutopilot = settings.mouseAutopilot || false;
             Game.testingMode = settings.testingMode || false;
         }
-        // Apply saved view mode (2D or 3D)
-        this.applyViewMode(settings.viewMode || '2d');
+        // Force 2D mode on touch devices, use saved preference otherwise
+        let viewMode = settings.viewMode || '2d';
+        if (typeof Grid !== 'undefined' && Grid.isTouchDevice()) {
+            viewMode = '2d';  // Always use 2D on mobile
+        }
+        this.applyViewMode(viewMode);
     },
 
     // Toggle between 2D and 3D view modes
     toggleViewMode() {
+        // Don't allow toggle on touch devices
+        if (typeof Grid !== 'undefined' && Grid.isTouchDevice()) {
+            return;
+        }
         const current = Storage.getSettings().viewMode || '2d';
         const next = current === '3d' ? '2d' : '3d';
         Storage.saveSettings({ viewMode: next });

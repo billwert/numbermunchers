@@ -33,13 +33,63 @@ const Grid = {
         this.setupResizeHandler();
     },
 
-    // Set up window resize handler
+    // Set up window resize handler with debouncing for orientation changes
     setupResizeHandler() {
-        window.addEventListener('resize', () => {
-            this.scaleToViewport();
-        });
-        // Initial scale
-        this.scaleToViewport();
+        let resizeTimer = null;
+        let orientationTimer = null;
+        
+        // Debounced resize handler
+        const handleResize = () => {
+            // Clear any pending resize
+            if (resizeTimer) clearTimeout(resizeTimer);
+            
+            // Wait for layout to settle (150ms debounce)
+            resizeTimer = setTimeout(() => {
+                // Use requestAnimationFrame to ensure DOM is ready
+                requestAnimationFrame(() => {
+                    this.scaleToViewport();
+                });
+            }, 150);
+        };
+        
+        // Orientation change needs longer delay
+        const handleOrientation = () => {
+            // Clear any pending orientation change
+            if (orientationTimer) clearTimeout(orientationTimer);
+            
+            // Wait longer for orientation (300ms) as it's more disruptive
+            orientationTimer = setTimeout(() => {
+                requestAnimationFrame(() => {
+                    // Force a double-check by reading dimensions first
+                    const gameArea = document.querySelector('.game-area');
+                    if (gameArea) {
+                        // Force reflow by reading a layout property
+                        void gameArea.offsetHeight;
+                    }
+                    this.scaleToViewport();
+                });
+            }, 300);
+        };
+        
+        // Listen to both events
+        window.addEventListener('resize', handleResize);
+        
+        // Orientation change is more critical for mobile
+        if ('onorientationchange' in window) {
+            window.addEventListener('orientationchange', handleOrientation);
+        }
+        
+        // Also listen to screen.orientation API if available (more reliable)
+        if (window.screen?.orientation) {
+            window.screen.orientation.addEventListener('change', handleOrientation);
+        }
+        
+        // Initial scale (with small delay to ensure DOM ready)
+        setTimeout(() => {
+            requestAnimationFrame(() => {
+                this.scaleToViewport();
+            });
+        }, 100);
     },
 
     // Scale the grid to fill the viewport
@@ -57,6 +107,12 @@ const Grid = {
 
         const availableWidth = gameArea.clientWidth;
         const availableHeight = gameArea.clientHeight;
+        
+        // Safety check: skip if dimensions are too small (can happen mid-rotation)
+        if (availableWidth < 100 || availableHeight < 100) {
+            return;  // Will retry on next resize event
+        }
+        
         const padding = 20;
 
         // Read current preset and perspective
